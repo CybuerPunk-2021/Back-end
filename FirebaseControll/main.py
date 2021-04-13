@@ -20,6 +20,9 @@ else:
 
 pprint(profile.get_profile('100'))
 
+userinfo.update_email('darak', 'darak_official@gmail.com')
+pprint(userinfo.get_userinfo('darak'))
+
 """
 dir = db.reference()
 dir.update({'USERINFO':['uid', 'login_id', 'login_password', 'email']})

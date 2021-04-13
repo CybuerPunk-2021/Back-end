@@ -28,7 +28,30 @@ def login(login_id, password):
     else:
         return False
 
-"""
-def change_pw(login_id, new_pw):
+def get_userinfo(login_id):
+    """
+    유저의 로그인 아이디를 통해 유저의 로그인 정보를 받는 함수
+
+    login_id(str) : 유저의 로그인 아이디
+    """
+    return db.reference('USERINFO/' + login_id).get()
+
+def update_email(login_id, email):
+    """
+    유저 계정의 이메일 주소를 수정하는 함수
+
+    login_id(str) : 유저의 로그인 아이디
+    email(str) : 수정할 이메일 주소
+    """
     dir = db.reference('USERINFO/' + login_id)
-"""
+    dir.update({'auth_email':email})
+
+def change_pw(login_id, new_pw):
+    """
+    유저 계정의 비밀번호를 수정하는 함수
+
+    login_id(str) : 유저의 로그인 아이디
+    new_pw(str) : 수정할 비밀번호
+    """
+    dir = db.reference('USERINFO/' + login_id)
+    dir.update({'login_pw':new_pw})
