@@ -13,14 +13,14 @@ if not firebase_admin._apps:
 
 # USERINFO 데이터베이스 구조
 """
-USERINFO':
+'USERINFO':
 {
-    'darak':
+    'login_id':
     {
-        'OAuth': '~~~~',
-        'auth_email': '~~~~@~~~~.~~~',
-        'login_pw': '~~~',
-        'uid': '~~~'
+        'OAuth': 'OAuth 연동 정보',
+        'auth_email': '이메일 주소',
+        'login_pw': '해시된 비밀번호',
+        'uid': 'uid 값'
     }
 }
 """
@@ -33,9 +33,9 @@ def login(login_id, password):
     login_id(str) : 입력한 사용자 로그인 ID
     password(str) : 입력한 사용자 로그인 패스워드
     """
-    pwstring = db.reference('USERINFO/' + login_id + '/login_pw').get()
+    exist_pw = db.reference('USERINFO').child(str(login_id)).child('login_pw').get()
 
-    if pwstring == etc.hash_password(password):
+    if exist_pw == etc.hash_password(password):
         return True
     else:
         return False
@@ -52,11 +52,19 @@ def get_userinfo(login_id):
 
     login_id(str) : 유저의 로그인 아이디
     """
-    return db.reference('USERINFO/' + login_id).get()
+    return db.reference('USERINFO').child(str(login_id)).get()
+
+def get_user_uid(login_id):
+    """
+    유저의 로그인 아이디로 uid를 받는 함수
+
+    login_id(str) : 유저의 로그인 아이디
+    """
+    return db.reference('USERINFO').child(str(login_id)).child('uid').get()
 
 def make_userinfo(login_id, login_pw, email, OAuth):
     """
-    DB에 새로운 유저 로그인 정보를 생성(회원가입)
+    DB에 새로운 유저 로그인 정보를 생성
     생성에 성공하면 True, 실패하면 False를 반환
 
     login_id(str) : 유저의 로그인 아이디
@@ -95,6 +103,38 @@ def make_userinfo(login_id, login_pw, email, OAuth):
         print("Already exist ID value.")
         return False
 
+def change_email(login_id, email):
+    """
+    유저 계정의 이메일 주소를 수정하는 함수
+
+    login_id(str) : 유저의 로그인 아이디
+    email(str) : 수정할 이메일 주소
+    """
+    dir = db.reference('USERINFO').child(str(login_id))
+    dir.update({'auth_email':email})
+
+def change_pw(login_id, check_pw, new_pw):
+    """
+    유저 계정의 비밀번호를 수정하는 함수
+    변경을 성공하면 True, 아니면 False 반환
+
+    login_id(str) : 유저의 로그인 아이디
+    check_pw(str) : 수정할 비밀번호
+    new_pw(str) : 수정할 비밀번호
+    """
+    cur_user = get_userinfo(login_id)
+    exist_pw = cur_user['login_pw']
+
+    # 기존의 비밀번호가 맞는지 확인 후 변경
+    if exist_pw == etc.hash_password(check_pw):
+        dir = db.reference('USERINFO/' + login_id)
+        dir.update({'login_pw':new_pw})
+        print("Password is changed successfully.")
+        return True
+    else:
+        print("Password is not matched.")
+        return False
+
 def delete_userinfo(login_id):
     """
     유저의 계정 정보를 삭제
@@ -113,35 +153,4 @@ def delete_userinfo(login_id):
     # 현재 DB상에 해당 아이디의 사용자가 없으면 중단  
     else:
         print("There's no ID in DB.")
-        return False
-
-def change_email(login_id, email):
-    """
-    유저 계정의 이메일 주소를 수정하는 함수
-
-    login_id(str) : 유저의 로그인 아이디
-    email(str) : 수정할 이메일 주소
-    """
-    dir = db.reference('USERINFO/' + login_id)
-    dir.update({'auth_email':email})
-
-def change_pw(login_id, check_pw, new_pw):
-    """
-    유저 계정의 비밀번호를 수정하는 함수
-
-    login_id(str) : 유저의 로그인 아이디
-    check_pw(str) : 수정할 비밀번호
-    new_pw(str) : 수정할 비밀번호
-    """
-    cur_user = get_userinfo(login_id)
-    exist_pw = cur_user['login_pw']
-
-    # 기존의 비밀번호가 맞는지 확인 후 변경
-    if exist_pw == etc.hash_password(check_pw):
-        dir = db.reference('USERINFO/' + login_id)
-        dir.update({'login_pw':new_pw})
-        print("Password is changed successfully.")
-        return True
-    else:
-        print("Password is not matched.")
         return False

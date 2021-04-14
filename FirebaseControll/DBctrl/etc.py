@@ -4,6 +4,7 @@ from firebase_admin import db
 
 from pprint import pprint
 from hashlib import sha256
+import datetime
 
 if not firebase_admin._apps:
     cred = credentials.Certificate("./key/key.json")
@@ -28,6 +29,9 @@ def hash_password(password):
     # 보안 이유로 사용하면 안 될 함수
     return sha256(password.encode()).hexdigest()
     
+def timestamp():
+    now = datetime.datetime.now()
+    return now.strftime('%Y-%m-%d %H:%M:%S')
 
 def get_all_data():
     """
