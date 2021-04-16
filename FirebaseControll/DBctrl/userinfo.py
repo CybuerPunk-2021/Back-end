@@ -62,6 +62,19 @@ def get_user_uid(login_id):
     """
     return db.reference('USERINFO').child(str(login_id)).child('uid').get()
 
+def get_id_using_email(email):
+    """
+    가입할 때 입력한 이메일 주소로 계정 로그인 아이디를 찾는 함수
+    정보가 있으면 로그인 아이디와 userinfo를 반환, 없으면 False 반환
+
+    email(str) : 찾고자 하는 계정의 이메일 주소 정보 
+    """
+    data = get_all_userinfo()
+    for user in data:
+        if data[user]['auth_email'] == email:
+            return {user:data[user]}
+    return False
+
 def make_userinfo(login_id, login_pw, email, OAuth):
     """
     DB에 새로운 유저 로그인 정보를 생성
@@ -103,7 +116,7 @@ def make_userinfo(login_id, login_pw, email, OAuth):
         print("Already exist ID value.")
         return False
 
-def change_email(login_id, email):
+def modify_email(login_id, email):
     """
     유저 계정의 이메일 주소를 수정하는 함수
 
@@ -113,7 +126,7 @@ def change_email(login_id, email):
     dir = db.reference('USERINFO').child(str(login_id))
     dir.update({'auth_email':email})
 
-def change_pw(login_id, check_pw, new_pw):
+def modify_pw(login_id, check_pw, new_pw):
     """
     유저 계정의 비밀번호를 수정하는 함수
     변경을 성공하면 True, 아니면 False 반환
