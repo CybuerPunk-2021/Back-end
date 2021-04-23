@@ -44,7 +44,7 @@ def get_all_userinfo():
     """
     DB에 있는 모든 계정의 정보를 불러오는 함수
     """
-    return db.reference('USERINFO/').get()
+    return db.reference('USERINFO').get()
 
 def get_userinfo(login_id):
     """

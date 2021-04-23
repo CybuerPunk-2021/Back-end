@@ -2,6 +2,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
+from .etc import timestamp
 from pprint import pprint
 
 if not firebase_admin._apps:
@@ -10,14 +11,21 @@ if not firebase_admin._apps:
 
 # 방명록
 
+def get_all_visitbook():
+    """
+    모든 방명록 정보를 받는 함수
+    """
+    return db.reference('VISITBOOK').get()
+
 def get_visitbook(uid):
     """
-    유저 프로필에 보여줄 방명록 댓글을 받는 함수
+    한 유저의 방명록 정보를 받는 함수
     
     uid(str) : 해당 프로필 유저의 uid 값
     """
-    return db.reference('VISITBOOK/' + uid).get()
+    return db.reference('VISITBOOK').child(str(uid)).get()
 
+# 수정 필요
 def get_visitbook_last_cid(uid):
     """
     유저 프로필 내 방명록 댓글 중 마지막 댓글의 cid 값을 받는 함수
@@ -33,8 +41,24 @@ def get_visitbook_comment(uid, cid):
     uid(str) : 해당 프로필 유저의 uid 값
     cid(int) : 방명록 댓글 cid 값
     """
-    return db.reference('VISITBOOK/' + uid + '/' + str(cid)).get()
+    return db.reference('VISITBOOK').child(str(uid)) + '/' + str(cid)).get()
 
+def add_comment(uid, writer_uid, comment):
+    dir = db.reference('VISITBOOK').child(str(uid))
+    new_comment_key = dir.push()
+    new_comment_key.set({
+        'writer_uid':writer_uid,
+        'comment':comment,
+        'timestamp':timestamp()
+        'reply_cid':None
+    })
+
+def modify_comment(uid, cid, writer_uid, comment)
+    dir = db.reference('VISITBOOK').child(str(uid)).child(str(cid))
+    dir.update({
+        'comment':comment,
+        'timestamp':timestamp()
+    })
 """
 def set_visitboook_comment(uid):
     dir = db.reference('VISITBOOK/' + uid)
