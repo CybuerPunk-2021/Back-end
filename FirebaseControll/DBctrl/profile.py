@@ -33,8 +33,6 @@ if not firebase_admin._apps:
 }
 """
 
-# 프로필
-
 def get_all_profile():
     """
     DB에 있는 모든 유저의 프로필 내용을 불러오는 함수
@@ -78,7 +76,7 @@ def make_profile(uid, login_id):
         print("Already exist same UID.")
         return False
 
-def change_nickname(uid, new_name):
+def modify_nickname(uid, new_name):
     """
     프로필 닉네임을 수정하는 함수
 
@@ -89,7 +87,7 @@ def change_nickname(uid, new_name):
     dir = db.reference('PROFILE').child(str(uid))
     dir.update({'nickname':new_name})
 
-def change_introduction(uid, new_intro):
+def modify_introduction(uid, new_intro):
     """
     프로필 간단 소개글을 수정하는 함수
 
@@ -114,7 +112,7 @@ def delete_profile(uid):
         loginID = dir.child('login_id').get()
         dir.delete()
 
-        print("Delete " + str(loginID) + "(uid : " + str(uid) + ") profile.")
+        print("Delete profile.(uid : " + str(uid) + ", login ID : " + str(loginID) + ")")
         return True
     # 현재 DB상에 해당 uid의 데이터가 없으면 중단  
     else:

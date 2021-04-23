@@ -9,7 +9,24 @@ if not firebase_admin._apps:
     cred = credentials.Certificate("./key/key.json")
     firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
 
-# 방명록
+# VISITBOOK 데이터베이스 구조
+"""
+'VISITBOOK':
+{
+    'uid':
+    {
+        'cid':
+        {
+            'comment': '댓글 내용',
+            'reply_cid': [답글 cid 1, cid 2,...],
+            'timestamp': '댓글 작성 날짜, 시각',
+            'writer_uid': 댓글 작성자 uid
+        },
+        ...
+    },
+    ...
+}
+"""
 
 def get_all_visitbook():
     """
