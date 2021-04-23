@@ -3,7 +3,11 @@ from firebase_admin import credentials
 from firebase_admin import db
 
 from . import etc
+from .profile import make_profile
 from .profile import get_profile
+from .profile import delete_profile
+from .visitbook import make_visitbook
+from .visitbook import delete_visitbook
 
 from pprint import pprint
 
@@ -53,6 +57,8 @@ def get_userinfo(login_id):
     login_id(str) : 유저의 로그인 아이디
     """
     return db.reference('USERINFO').child(str(login_id)).get()
+
+# def get_userinfo_using_uid(uid):
 
 def get_user_uid(login_id):
     """
@@ -109,6 +115,11 @@ def make_userinfo(login_id, login_pw, email, OAuth):
             'login_pw': hash_pw,
             'uid': uid
         })
+
+        # 유저 정보 생성 후 다른 데이터베이스 파일에 유저 구조 생성
+        make_profile(uid, login_id)
+        make_visitbook(uid)
+
         print("Producing " + login_id + " account success.")
         return True
     # 현재 DB상에 해당 아이디의 사용자가 있으면 중단  
@@ -140,7 +151,7 @@ def modify_pw(login_id, check_pw, new_pw):
 
     # 기존의 비밀번호가 맞는지 확인 후 변경
     if exist_pw == etc.hash_password(check_pw):
-        dir = db.reference('USERINFO/' + login_id)
+        dir = db.reference('USERINFO').child(str(login_id))
         dir.update({'login_pw':new_pw})
         print("Password is changed successfully.")
         return True
@@ -157,7 +168,14 @@ def delete_userinfo(login_id):
     """
     # 현재 DB상에 해당 아이디의 사용자가 있으면 진행
     if get_userinfo(str(login_id)) is not None:
-        # DB에서 삭제
+        # 유저의 uid 값 불러오기
+        uid = get_user_uid(login_id)
+
+        # 프로필, 방명록 정보 삭제
+        delete_visitbook(uid)
+        delete_profile(uid)
+
+        # DB에서 유저정보 삭제
         dir = db.reference('USERINFO').child(str(login_id))
         dir.delete()
 
@@ -165,5 +183,5 @@ def delete_userinfo(login_id):
         return True
     # 현재 DB상에 해당 아이디의 사용자가 없으면 중단  
     else:
-        print("There's no ID in DB.")
+        print("There's no ID in USERINFO DB.")
         return False

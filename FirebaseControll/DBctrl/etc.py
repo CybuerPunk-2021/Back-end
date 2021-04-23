@@ -40,7 +40,7 @@ def get_all_data():
     print("Are you sure? (if yes, input 'y' or 'Y'.)")
     response = input()
 
-    if response is 'y' or 'Y':
+    if response == 'y' or response == 'Y':
         dir = db.reference()
         return dir.get()
     else:

@@ -59,6 +59,10 @@ def get_comment_reply(uid, cid):
 
     return reply_list
 
+def make_visitbook(uid):
+    dir = db.reference('VISITBOOK')
+    dir.update({str(uid):None})
+
 def add_comment(uid, writer_uid, comment):
     """
     유저 프로필 내 방명록에 댓글을 남기는 함수
@@ -132,3 +136,22 @@ def delete_comment(uid, cid):
 
     # 답글 삭제 후 마지막으로 댓글 삭제
     dir.delete()
+
+def delete_visitbook(uid):
+    """
+    한 유저의 방명록 정보를 모두 삭제하는 함수
+    
+    uid(int) : 해당 프로필 유저의 uid 값
+    """
+    # 현재 DB상에 해당 uid의 데이터가 있으면 진행
+    if get_visitbook(uid) is not None:
+        # DB에서 삭제
+        dir = db.reference('VISITBOOK').child(str(uid))
+        dir.delete()
+
+        print("Delete visitbook.(uid : " + str(uid) + ")")
+        return True
+    # 현재 DB상에 해당 uid의 데이터가 없으면 중단  
+    else:
+        print("There's no UID value in VISITBOOK DB.")
+        return False

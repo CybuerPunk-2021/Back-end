@@ -46,13 +46,14 @@ def get_profile(uid):
     유저의 프로필 내용을 불러오는 함수
     유저 데이터가 존재하면 해당 프로필 정보를 반환, 없으면 None 반환
 
-    uid(str) : 해당 프로필 유저의 uid
+    uid(int) : 해당 프로필 유저의 uid
     """
     return db.reference('PROFILE').child(str(uid)).get()
 
 def make_profile(uid, login_id):
     """
     해당 uid 값으로 초기 프로필 데이터를 세팅하는 함수
+    생성에 성공하면 True, 실패하면 False 반환
 
     uid(str) : 해당 프로필 유저의 uid
     login_id(str) : 해당 프로필 유저의 로그인 아이디
@@ -77,7 +78,7 @@ def make_profile(uid, login_id):
         print("Already exist same UID.")
         return False
 
-def modify_nickname(uid, new_name):
+def change_nickname(uid, new_name):
     """
     프로필 닉네임을 수정하는 함수
 
@@ -88,7 +89,7 @@ def modify_nickname(uid, new_name):
     dir = db.reference('PROFILE').child(str(uid))
     dir.update({'nickname':new_name})
 
-def modify_introduction(uid, new_intro):
+def change_introduction(uid, new_intro):
     """
     프로필 간단 소개글을 수정하는 함수
 
@@ -102,19 +103,20 @@ def modify_introduction(uid, new_intro):
 def delete_profile(uid):
     """
     유저의 프로필 정보를 삭제
-    삭제를 성공하면 True, 아니면 False를 반환
+    삭제를 성공하면 True, 실패하면 False를 반환
 
     login_id(str) : 유저의 로그인 아이디
     """
-    # 현재 DB상에 해당 아이디의 사용자가 있으면 진행
-    if get_userinfo(str(login_id)) is not None:
+    # 현재 DB상에 해당 uid의 데이터가 있으면 진행
+    if get_profile(uid) is not None:
         # DB에서 삭제
         dir = db.reference('PROFILE').child(str(uid))
+        loginID = dir.child('login_id').get()
         dir.delete()
 
-        print("Delete " + str(login_id) + "(uid : " + str(uid) + ") profile.")
+        print("Delete " + str(loginID) + "(uid : " + str(uid) + ") profile.")
         return True
-    # 현재 DB상에 해당 아이디의 사용자가 없으면 중단  
+    # 현재 DB상에 해당 uid의 데이터가 없으면 중단  
     else:
-        print("There's no UID in DB.")
+        print("There's no UID in PROFILE DB.")
         return False
