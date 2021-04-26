@@ -2,6 +2,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
+from .profile import is_profile_exist
 from .etc import timestamp
 from pprint import pprint
 
@@ -76,10 +77,6 @@ def get_comment_reply(uid, cid):
 
     return reply_list
 
-def make_visitbook(uid):
-    dir = db.reference('VISITBOOK')
-    dir.update({str(uid):None})
-
 def add_comment(uid, writer_uid, comment):
     """
     유저 프로필 내 방명록에 댓글을 남기는 함수
@@ -89,15 +86,21 @@ def add_comment(uid, writer_uid, comment):
     comment(str) : 댓글 내용 문자열
     """
     dir = db.reference('VISITBOOK').child(str(uid))
-    new_comment = dir.push()
-    new_comment.set({
-        'writer_uid':writer_uid,
-        'comment':comment,
-        'timestamp':timestamp(),
-        'reply_cid':[]
-    })
 
-    return new_comment.key
+    if is_profile_exist(str(uid)) is True:
+        if is_profile_exist(str(writer_uid)) is True:
+            new_comment = dir.push()
+            new_comment.set({
+                'writer_uid':writer_uid,
+                'comment':comment,
+                'timestamp':timestamp(),
+                'reply_cid':[]
+            })
+            return new_comment.key
+        else:
+            print("There's no writer's uid user data in DB.")
+    else:
+        print("Visitbook is not exist. Wrong uid value.")
 
 def add_comment_reply(uid, cid, writer_uid, reply):
     """

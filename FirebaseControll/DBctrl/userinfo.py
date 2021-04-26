@@ -4,9 +4,8 @@ from firebase_admin import db
 
 from . import etc
 from .profile import make_profile
-from .profile import get_profile
+from .profile import is_profile_exist
 from .profile import delete_profile
-from .visitbook import make_visitbook
 from .visitbook import delete_visitbook
 
 from pprint import pprint
@@ -58,7 +57,37 @@ def get_userinfo(login_id):
     """
     return db.reference('USERINFO').child(str(login_id)).get()
 
-# def get_userinfo_using_uid(uid):
+def get_userinfo_using_uid(uid):
+    """
+    계정의 uid를 이용해 유저 정보를 얻는 함수
+    정보가 있으면 로그인 아이디와 userinfo를 반환, 없으면 False 반환
+
+    uid(int) : 찾고자 하는 계정의 uid 값
+    """
+    dir = db.reference('USERINFO')
+    founded_info = dir.order_by_child('uid').equal_to(str(uid)).get()
+    if founded_info is not None:
+        data = founded_info.popitem(last=True)
+        login_id = data[0]
+        return login_id
+    else:
+        return None
+
+def get_userinfo_using_email(email):
+    """
+    가입할 때 입력한 이메일 주소로 계정 로그인 아이디를 찾는 함수
+    정보가 있으면 해당 계정의 userinfo 데이터를 반환, 없으면 False 반환
+
+    email(str) : 찾고자 하는 계정의 이메일 주소 정보 
+    """
+    dir = db.reference('USERINFO')
+    founded_info = dir.order_by_child('auth_email').equal_to(email).get()
+    if founded_info is not None:
+        data = founded_info.popitem(last=True)
+        login_id = data[0]
+        return login_id
+    else:
+        return None
 
 def get_user_uid(login_id):
     """
@@ -68,20 +97,8 @@ def get_user_uid(login_id):
     """
     return db.reference('USERINFO').child(str(login_id)).child('uid').get()
 
-def get_id_using_email(email):
-    """
-    가입할 때 입력한 이메일 주소로 계정 로그인 아이디를 찾는 함수
-    정보가 있으면 로그인 아이디와 userinfo를 반환, 없으면 False 반환
-
-    email(str) : 찾고자 하는 계정의 이메일 주소 정보 
-    """
-    data = get_all_userinfo()
-    for user in data:
-        if data[user]['auth_email'] == email:
-            return {user:data[user]}
-    return False
-
-def make_userinfo(login_id, login_pw, email, OAuth):
+# is_profile_exist 후에 바꾸기
+def make_userinfo(login_id, login_pw, email, OAuth, nickname):
     """
     DB에 새로운 유저 로그인 정보를 생성
     생성에 성공하면 True, 실패하면 False를 반환
@@ -98,10 +115,11 @@ def make_userinfo(login_id, login_pw, email, OAuth):
 
         # 생성한 uid가 현재 사용하지 않는 uid값이 나올 때까지 반복
         while True:
+            print('hash')
             tmp_id = tmp_id + '0'
             uid = etc.make_uid(str(tmp_id))
 
-            if get_profile(uid) is None:
+            if is_profile_exist(str(uid)) is False:
                 break
         
         # password 해시화
@@ -117,8 +135,7 @@ def make_userinfo(login_id, login_pw, email, OAuth):
         })
 
         # 유저 정보 생성 후 다른 데이터베이스 파일에 유저 구조 생성
-        make_profile(uid, login_id)
-        make_visitbook(uid)
+        make_profile(uid, login_id, nickname)
 
         print("Producing " + login_id + " account success.")
         return True
@@ -185,28 +202,3 @@ def delete_userinfo(login_id):
     else:
         print("There's no ID in USERINFO DB.")
         return False
-
-"""
-b
-    dir = db.reference()
-    dir.set({
-        "rules":{
-            "USERINFO":{
-                ".indexOn": ['uid', 'auth_email']
-            }
-        }
-    })
-"""
-"""
-def get_using_email(email):
-    
-    가입할 때 입력한 이메일 주소로 계정 로그인 아이디를 찾는 함수
-    정보가 있으면 로그인 아이디와 userinfo를 반환, 없으면 False 반환
-
-    email(str) : 찾고자 하는 계정의 이메일 주소 정보 
-    
-    dir = db.reference('USERINFO')
-    data = dir.order_by_child('uid').get()
-    #data = dir.order_by_child('auth_email').equal_to(email).get()
-    return data
-"""

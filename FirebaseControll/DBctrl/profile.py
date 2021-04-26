@@ -39,6 +39,19 @@ if not firebase_admin._apps:
 }
 """
 
+def is_profile_exist(uid):
+    """
+    해당 uid 값을 가진 유저가 존재하는지 알려주는 함수
+    해당 uid의 유저가 있다면 True, 없다면 False 반환
+
+    uid(int) : 찾고자 하는 유저의 uid
+    """
+    dir = db.reference('PROFILE').child(str(uid))
+    if dir.get() is not None:
+        return True
+    else:
+        return False
+
 def get_all_profile():
     """
     DB에 있는 모든 유저의 프로필 내용을 불러오는 함수
@@ -52,16 +65,19 @@ def get_profile(uid):
 
     uid(int) : 해당 프로필 유저의 uid
     """
-    dir = db.reference('PROFILE').child(str(uid))
+    if is_profile_exist(str(uid)) is True:
+        dir = db.reference('PROFILE').child(str(uid))
 
-    # 팔로잉, 팔로워 수 동기화
-    if dir.child('num_following').get() != get_user_following_num(uid):
-        update_profile_following_num(uid)
-    if dir.child('num_follower').get() != get_user_follower_num(uid):
-        update_profile_follower_num(uid)
-    return dir.get()
+        # 팔로잉, 팔로워 수 동기화
+        if dir.child('num_following').get() != get_user_following_num(uid):
+            update_profile_following_num(uid)
+        if dir.child('num_follower').get() != get_user_follower_num(uid):
+            update_profile_follower_num(uid)
+        return dir.get()
+    else:
+        return None
 
-def make_profile(uid, login_id):
+def make_profile(uid, login_id, nickname):
     """
     해당 uid 값으로 초기 프로필 데이터를 세팅하는 함수
     생성에 성공하면 True, 실패하면 False 반환
@@ -77,7 +93,7 @@ def make_profile(uid, login_id):
             'bg_image': None,
             'introduction': 'Hello',
             'login_id': str(login_id),
-            'nickname': str(login_id),
+            'nickname': str(nickname),
             'num_follower': 0,
             'num_following': 0,
             'profile_image': None,
@@ -107,7 +123,6 @@ def modify_introduction(uid, new_intro):
     uid(str) : 해당 프로필 유저의 uid
     new_name(str) : 변경할 간단 소개글 정보
     """
-
     dir = db.reference('PROFILE').child(str(uid))
     dir.update({'introduction':new_intro})
 
