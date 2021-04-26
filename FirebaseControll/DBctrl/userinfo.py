@@ -187,7 +187,7 @@ def delete_userinfo(login_id):
         return False
 
 """
-def make_index_rules():
+b
     dir = db.reference()
     dir.set({
         "rules":{
@@ -199,12 +199,12 @@ def make_index_rules():
 """
 """
 def get_using_email(email):
-
+    
     가입할 때 입력한 이메일 주소로 계정 로그인 아이디를 찾는 함수
     정보가 있으면 로그인 아이디와 userinfo를 반환, 없으면 False 반환
 
     email(str) : 찾고자 하는 계정의 이메일 주소 정보 
-
+    
     dir = db.reference('USERINFO')
     data = dir.order_by_child('uid').get()
     #data = dir.order_by_child('auth_email').equal_to(email).get()

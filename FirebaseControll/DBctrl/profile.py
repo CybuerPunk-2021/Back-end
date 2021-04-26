@@ -2,6 +2,12 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
+from .follow import get_user_following_num
+from .follow import get_user_follower_num
+from .follow import update_profile_following_num
+from .follow import update_profile_follower_num
+from .follow import delete_user_all_follow_info
+
 from pprint import pprint
 
 if not firebase_admin._apps:
@@ -46,7 +52,14 @@ def get_profile(uid):
 
     uid(int) : 해당 프로필 유저의 uid
     """
-    return db.reference('PROFILE').child(str(uid)).get()
+    dir = db.reference('PROFILE').child(str(uid))
+
+    # 팔로잉, 팔로워 수 동기화
+    if dir.child('num_following').get() != get_user_following_num(uid):
+        update_profile_following_num(uid)
+    if dir.child('num_follower').get() != get_user_follower_num(uid):
+        update_profile_follower_num(uid)
+    return dir.get()
 
 def make_profile(uid, login_id):
     """
@@ -107,6 +120,9 @@ def delete_profile(uid):
     """
     # 현재 DB상에 해당 uid의 데이터가 있으면 진행
     if get_profile(uid) is not None:
+        # 프로필 삭제 전 유저의 팔로우 정보 삭제
+        delete_user_all_follow_info(uid)
+
         # DB에서 삭제
         dir = db.reference('PROFILE').child(str(uid))
         loginID = dir.child('login_id').get()

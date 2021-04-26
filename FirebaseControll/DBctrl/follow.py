@@ -198,6 +198,26 @@ def get_user_follower_num(uid):
     else:
         return len(relation_list)
 
+def update_profile_following_num(uid):
+    """
+    유저 프로필의 팔로잉 수 정보를 FOLLOW DB와 동기화하는 함수
+
+    uid(int) : 유저의 uid 
+    """
+    following_num = get_user_following_num(uid)
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.update({'num_following':following_num})
+
+def update_profile_follower_num(uid):
+    """
+    유저 프로필의 팔로워 수 정보를 FOLLOW DB와 동기화하는 함수
+
+    uid(int) : 유저의 uid 
+    """
+    follower_num = get_user_follower_num(uid)
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.update({'num_follower':follower_num})
+
 def is_following(compare_user_uid, target_user_uid):
     """
     한 유저가 다른 유저를 팔로잉하고 있는지 확인하는 함수
@@ -242,6 +262,8 @@ def add_follow_info(from_uid, to_uid, relation_id):
     else:
         following_list.append(str(relation_id))
         dir.update({'following':following_list})
+    # 정보 저장 후 from 유저 프로필의 팔로잉 수 동기화
+    update_profile_following_num(from_uid)
 
     # from은 to의 팔로워, 정보 저장
     dir = db.reference('FOLLOW').child(str(to_uid))
@@ -251,6 +273,8 @@ def add_follow_info(from_uid, to_uid, relation_id):
     else:
         follower_list.append(str(relation_id))
         dir.update({'follower':follower_list})
+    # 정보 저장 후 to 유저 프로필의 팔로워 수 동기화
+    update_profile_follower_num(to_uid)
 
     print("Follow list update complete.(" + str(from_uid) + " -> " + str(to_uid) + ")")
 
@@ -270,6 +294,8 @@ def delete_follow_info(from_uid, to_uid, relation_id):
         if relation_id in following_list:
             following_list.remove(str(relation_id))
             dir.update({'following':following_list})
+            # 정보 저장 후 from 유저 프로필의 팔로잉 수 동기화
+            update_profile_following_num(from_uid)
 
     # to의 팔로워 목록에서 from의 정보가 삭제
     dir = db.reference('FOLLOW').child(str(to_uid))
@@ -278,6 +304,8 @@ def delete_follow_info(from_uid, to_uid, relation_id):
         if relation_id in follower_list:
             follower_list.remove(str(relation_id))
             dir.update({'follower':follower_list})
+            # 정보 삭제 후 to 유저 프로필의 팔로워 수 동기화
+            update_profile_follower_num(to_uid)
 
     print("Follow list delete complete.(" + str(from_uid) + " -> " + str(to_uid) + ")")
     delete_relation(str(relation_id))
