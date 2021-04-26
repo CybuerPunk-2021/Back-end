@@ -8,28 +8,11 @@ if not firebase_admin._apps:
     cred = credentials.Certificate("./key/key.json")
     firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
 
-# PROFILE 데이터베이스 구조
+# ITEM 데이터베이스 구조
 """
-'PROFILE':
+'ITEM':
 {
-    'uid':
-    {
-        'bg_image': '백그라운드 이미지, image_path',
-        'introduction': '간단 소개글',
-        'login_id': 'USERINFO의 로그인 아이디',
-        'nickname': '닉네임',
-        'num_follower': 팔로워 수,
-        'num_following': 팔로잉 수,
-        'profile_image': '프로필 이미지, image_path',
-        'snapshot_info':
-        {
-            'comment': '스냅샷 코멘트',
-            'like': 스냅샷 좋아요 수,
-            'thumbnail': '스냅샷 썸네일 이미지, image_path',
-            'timestamp': '스냅샷 생성 시기',
-            'version': '스냅샷 버전'
-        }
-    }
+    
 }
 """
 
