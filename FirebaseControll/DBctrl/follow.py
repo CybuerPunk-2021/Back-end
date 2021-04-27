@@ -69,7 +69,10 @@ def make_relation(from_uid, to_uid):
         'to_uid': to_uid
     })
     print("Relation " + str(new_data.key) + " created.")
-    add_follow_info(from_uid, to_uid, new_data.key)
+    if add_follow_info(from_uid, to_uid, new_data.key) is True:
+        return True
+    else:
+        return False
 
 def delete_relation(relation_id):
     """
@@ -86,8 +89,10 @@ def delete_relation(relation_id):
 
         dir.delete()
         print("Relation " + str(relation_id) + " deleted.")
+        return True
     else:
         print("There's no relation " + str(relation_id) + "in DB.")
+        return False
 
 # FOLLOW 데이터베이스 구조
 """
@@ -249,6 +254,7 @@ def add_follow_info(from_uid, to_uid, relation_id):
     """
     FOLLOW DB 내 from의 팔로잉 목록과 to의 팔로워 목록 내에서
     서로의 팔로우 정보를 추가하는 함수
+    팔로우 정보 추가 완료 시 True 반환
 
     from_uid(int) : 팔로우를 끊는 유저의 uid
     to_uid(int) : 팔로우를 끊을 유저의 uid
@@ -277,6 +283,7 @@ def add_follow_info(from_uid, to_uid, relation_id):
     update_profile_follower_num(to_uid)
 
     print("Follow list update complete.(" + str(from_uid) + " -> " + str(to_uid) + ")")
+    return True
 
 def delete_follow_info(from_uid, to_uid, relation_id):
     """
@@ -308,7 +315,10 @@ def delete_follow_info(from_uid, to_uid, relation_id):
             update_profile_follower_num(to_uid)
 
     print("Follow list delete complete.(" + str(from_uid) + " -> " + str(to_uid) + ")")
-    delete_relation(str(relation_id))
+    if delete_relation(str(relation_id)) is True:
+        return True
+    else:
+        return False
 
 def delete_user_all_follow_info(uid):
     """
@@ -347,10 +357,14 @@ def follow_user(from_uid, to_uid):
     """
     # 만약 from이 to를 팔로우하지 않은 상태라면 관계 생성
     if is_following(from_uid, to_uid) is None:
-        make_relation(from_uid, to_uid)
+        if make_relation(from_uid, to_uid) is True:
+            return True
+        else:
+            return False
     # 만약 이미 from에서 to를 팔로우하고 있다면 중지
     else:
         print(str(from_uid) + " already following " + str(to_uid) + ".")
+        return False
 
 def unfollow_user(from_uid, to_uid):
     """
@@ -369,7 +383,11 @@ def unfollow_user(from_uid, to_uid):
 
     # 만약 from이 to를 팔로우하고 있다면 삭제 진행
     if relation_info is not None:
-        delete_follow_info(from_uid, to_uid, relation_info)
+        if delete_follow_info(from_uid, to_uid, relation_info) is True:
+            return True
+        else:
+            return False
     # 만약 이미 from이 to를 팔로우하고 있지 않다면 중지
     else:
         print(str(from_uid) + " isn't following " + str(to_uid) + ".")
+        return False

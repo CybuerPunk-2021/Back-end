@@ -52,6 +52,21 @@ def is_profile_exist(uid):
     else:
         return False
 
+def is_profile_nickname_exist(nickname):
+    """
+    DB 상에 현재 입력한 닉네임을 가진 유저가 있는지 확인하는 함수
+    DB에 해당 닉네임의 유저가 있으면 True, 없으면 False 반환
+
+    nickname(str) : 찾고자 하는 닉네임 값
+    """
+    dir = db.reference('PROFILE')
+    founded_info = dir.order_by_child('nickname').equal_to(nickname).get()
+    
+    if len(founded_info) > 0:
+        return True
+    else:
+        return False
+
 def get_all_profile():
     """
     DB에 있는 모든 유저의 프로필 내용을 불러오는 함수
@@ -76,6 +91,14 @@ def get_profile(uid):
         return dir.get()
     else:
         return None
+
+def get_profile_nickname(uid):
+    """
+    해당 유저의 닉네임을 받는 함수
+
+    uid(int) : 해당 프로필 유저의 uid
+    """
+    return db.reference('PROFILE').child(str(uid)).child('nickname').get()
 
 def make_profile(uid, login_id, nickname):
     """
@@ -112,7 +135,7 @@ def modify_nickname(uid, new_name):
     uid(str) : 해당 프로필 유저의 uid
     new_name(str) : 변경할 닉네임 정보
     """
-
+    
     dir = db.reference('PROFILE').child(str(uid))
     dir.update({'nickname':new_name})
 

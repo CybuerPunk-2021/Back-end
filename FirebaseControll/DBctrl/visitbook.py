@@ -18,16 +18,18 @@ if not firebase_admin._apps:
     {
         'cid':
         {
+            'writer_uid': 댓글 작성자 uid,
             'comment': '댓글 내용',
-            'reply_cid': [답글 cid 1, cid 2,...],
             'timestamp': '댓글 작성 날짜, 시각',
-            'writer_uid': 댓글 작성자 uid
+            'reply_cid': [답글 cid 1, cid 2,...],
         },
         ...
     },
     ...
 }
 """
+# DB 구조 바꾸기
+
 
 def get_all_visitbook():
     """

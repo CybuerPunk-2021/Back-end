@@ -2,3 +2,5 @@ key.json
 __pycache__/
 *.pyc
 test.py
+functest.py
+rule.txt
