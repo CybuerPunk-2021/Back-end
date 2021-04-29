@@ -3,6 +3,7 @@ __all__ = [
     'follow',
     'item',
     'profile',
+    'snapshot',
     'userinfo',
     'visitbook',
     ]
