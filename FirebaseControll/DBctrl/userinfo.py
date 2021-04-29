@@ -144,8 +144,8 @@ def modify_email(login_id, email):
         print("There's no " + login_id + " user.")
         return False
 
-# 비밀번호 변경
-def modify_password(login_id, check_pw, new_pw):
+# 비밀번호 변경(로그인 아이디)
+def modify_password_using_login_id(login_id, check_pw, new_pw):
     """
     로그인 아이디를 이용해 유저 계정의 비밀번호를 수정하는 함수
     변경을 성공하면 True, 아니면 False 반환
@@ -173,6 +173,7 @@ def modify_password(login_id, check_pw, new_pw):
         print("Invalid user login ID.")
         return False
 
+# 비밀번호 변경(유저 UID)
 def modify_password_using_uid(uid, check_pw, new_pw):
     """
     유저의 uid를 이용해 유저 계정의 비밀번호를 수정하는 함수

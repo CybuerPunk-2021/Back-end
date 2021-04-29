@@ -61,7 +61,7 @@ def is_profile_nickname_exist(nickname):
     """
     dir = db.reference('PROFILE')
     founded_info = dir.order_by_child('nickname').equal_to(nickname).get()
-    
+
     if len(founded_info) > 0:
         return True
     else:
@@ -128,26 +128,46 @@ def make_profile(uid, login_id, nickname):
         print("Already exist same UID.")
         return False
 
+# 닉네임 변경
 def modify_nickname(uid, new_name):
     """
     프로필 닉네임을 수정하는 함수
+    수정을 성공하면 True, 실패하면 False 반환
 
     uid(str) : 해당 프로필 유저의 uid
     new_name(str) : 변경할 닉네임 정보
     """
-    
     dir = db.reference('PROFILE').child(str(uid))
-    dir.update({'nickname':new_name})
+    # 유효한 유저의 uid 값일 때 진행
+    if dir.get() is not None:
+        # 다른 유저들이 사용하지 않는 닉네임일 때 변경
+        if is_profile_nickname_exist(new_name) is False:
+            dir.update({'nickname':new_name})
+            return True
+        else:
+            print("Already used nickname value.")
+            return False
+    else:
+        print("Invalid UID value.")
+        return False
 
+# 간단 소개글 변경
 def modify_introduction(uid, new_intro):
     """
     프로필 간단 소개글을 수정하는 함수
+    수정을 성공하면 True, 실패하면 False 반환
 
     uid(str) : 해당 프로필 유저의 uid
-    new_name(str) : 변경할 간단 소개글 정보
+    new_intro(str) : 변경할 간단 소개글 정보
     """
     dir = db.reference('PROFILE').child(str(uid))
-    dir.update({'introduction':new_intro})
+    # 유효한 유저의 uid 값일 때 진행
+    if dir.get() is not None:
+        dir.update({'introduction':new_intro})
+        return True
+    else:
+        print("Invalid UID value.")
+        return False
 
 def delete_profile(uid):
     """
