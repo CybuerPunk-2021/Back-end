@@ -5,9 +5,10 @@ from firebase_admin import db
 from pprint import pprint
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("./key/key.json")
+    cred = credentials.Certificate("../FirebaseControll/key/key.json")
     firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
 
+# SNAPSHOT 데이터베이스 구조
 """
 'SNAPSHOT':
 {
@@ -198,9 +199,6 @@ def unlike_snapshot(uid, unlike_uid, timestamp):
     # 해당 유저가 좋아요 표시를 남기지 않았다면 작업 취소
     print(str(unlike_uid) + " user doesn't like snapshot yet.")
     return False
-
-
-
 
 # 스냅샷 좋아요 수
 def get_snapshot_like_num(uid, timestamp):

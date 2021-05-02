@@ -1,0 +1,249 @@
+=========================================
+** USERINFO **
+
+# 계정 생성
+make_userinfo(login_id, login_pw, email, nickname):
+    DB에 새로운 유저 로그인 정보를 생성
+    생성에 성공하면 True, 실패하면 False를 반환
+
+    login_id(str) : 유저의 로그인 아이디
+    login_pw(str) : 유저의 로그인 비밀번호
+    email(str) : 유저의 인증 이메일주소
+
+# 이메일 주소 변경
+modify_email(login_id, email):
+    유저 계정의 이메일 주소를 수정하는 함수
+
+    login_id(str) : 유저의 로그인 아이디
+    email(str) : 수정할 이메일 주소
+
+# 비밀번호 변경(로그인 아이디)
+modify_password_using_login_id(login_id, check_pw, new_pw):
+    로그인 아이디를 이용해 유저 계정의 비밀번호를 수정하는 함수
+    변경을 성공하면 True, 아니면 False 반환
+
+    login_id(str) : 유저의 로그인 아이디
+    check_pw(str) : 수정할 비밀번호
+    new_pw(str) : 수정할 비밀번호
+
+# 비밀번호 변경(유저 UID)
+modify_password_using_uid(uid, check_pw, new_pw):
+    유저의 uid를 이용해 유저 계정의 비밀번호를 수정하는 함수
+    변경을 성공하면 True, 아니면 False 반환
+
+    uid(int) : 유저의 uid
+    check_pw(str) : 수정할 비밀번호
+    new_pw(str) : 수정할 비밀번호
+
+# 유저 계정 삭제
+delete_userinfo(login_id):
+    유저의 계정 정보를 삭제
+    삭제를 성공하면 True, 아니면 False를 반환
+
+    login_id(str) : 유저의 로그인 아이디
+
+# 아이디, 이메일 중복체크
+check_id_nickname_dup(login_id, nickname):
+
+    로그인 ID와 이메일 주소 두 데이터가 현재 DB에 존재하는지 알려주는 함수
+    
+    데이터가 없으면 회원가입 가능, True 반환
+    로그인 ID가 존재하면 -1 반환
+    닉네임이 존재하면 -2 반환
+    만약 두 데이터가 모두 중복이면 -1 반환 (ID 중복으로 우선 인식)
+
+    login_id(str) : 중복 확인하고자 하는 로그인 ID
+    nickname(str) : 중복 확인하고자 하는 닉네임 값
+
+# 로그인 중 패스워드 검증
+login(login_id, password):
+    입력받은 값으로 로그인 수행
+    매개변수 password와 DB의 login_pw와
+    일치하면 ['유저 닉네임', uid]를, 불일치하면 False 반환
+
+    login_id(str) : 입력한 사용자 로그인 ID
+    password(str) : 입력한 사용자 로그인 패스워드
+
+=========================================
+** PROFILE **
+
+# 유저 프로필
+get_profile(uid):
+    유저의 프로필 내용을 불러오는 함수
+    유저 데이터가 존재하면 해당 프로필 정보를 반환, 없으면 None 반환
+
+    uid(int) : 해당 프로필 유저의 uid
+
+# 닉네임 변경
+modify_nickname(uid, new_name):
+    프로필 닉네임을 수정하는 함수
+    수정을 성공하면 True, 실패하면 False 반환
+
+    uid(str) : 해당 프로필 유저의 uid
+    new_name(str) : 변경할 닉네임 정보
+
+# 간단 소개글 변경
+modify_introduction(uid, new_intro):
+    프로필 간단 소개글을 수정하는 함수
+    수정을 성공하면 True, 실패하면 False 반환
+
+    uid(str) : 해당 프로필 유저의 uid
+    new_intro(str) : 변경할 간단 소개글 정보
+
+=========================================
+** VISITBOOK **
+
+# 댓글 리스트 요청
+get_comment_list(uid):
+    한 유저의 방명록 댓글의 리스트를 받는 함수
+    return 형식 : 
+    [
+        {
+            'cid': '댓글 cid',
+            'comment': '댓글 내용',
+            'reply_num': 답글 갯수,
+            'timestamp': '타임스탬프',
+            'writer_uid': '댓글 작성자 uid'
+        },
+        ...
+    ]
+
+    uid(int) : 해당 프로필 유저의 uid 값
+
+# 답글 리스트 요청
+get_comment_reply_list(uid, cid):
+    방명록 댓글의 답글을 배열로 받는 함수
+    return 형식 : 
+    [
+        {
+            'reply_cid': '답글 cid',
+            'reply_comment': '답글 내용',
+            'timestamp': '타임스탬프',
+            'writer_uid': '답글 작성자 uid'
+        },
+        ...
+    ]
+
+    uid(int) : 해당 프로필 유저의 uid 값
+    cid(int) : 방명록 댓글 cid 값
+
+# 방명록 댓글 추가
+add_comment(uid, writer_uid, comment):
+    유저 프로필 내 방명록에 댓글을 남기는 함수
+    성공하면 True, 실패하면 False 반환
+    
+    uid(int) : 해당 프로필 유저의 uid 값
+    writer_uid(int) : 댓글 작성 유저의 uid 값
+    comment(str) : 댓글 내용
+
+# 방명록 댓글의 답글 추가
+add_comment_reply(uid, cid, writer_uid, reply_comment):
+    방명록 댓글에 답글을 남기는 함수
+    
+    uid(int) : 해당 프로필 유저의 uid 값
+    cid(str) : 답글을 달 댓글의 cid 값
+    writer_uid(int) : 답글 작성 유저의 uid 값
+    reply_comment(str) : 답글 내용 문자열
+
+# 방명록 댓글 수정
+modify_comment(uid, cid, writer_uid, modified_comment):
+    방명록 댓글 내용을 수정하는 함수
+    
+    uid(int) : 해당 프로필 유저의 uid 값
+    cid(str) : 답글을 달 댓글의 cid 값
+    writer_uid(int) : 댓글 작성 유저의 uid 값
+    modified_comment(str) : 수정할 댓글 내용
+
+# 방명록 댓글의 답글 수정
+modify_comment_reply(uid, cid, reply_cid, modified_reply_comment):
+    방명록 댓글의 답글 내용을 수정하는 함수
+    
+    uid(int) : 해당 프로필 유저의 uid 값
+    cid(str) : 답글을 달 댓글의 cid 값
+    modified_comment(str) : 수정할 댓글 내용
+
+=========================================
+** FOLLOW/RELATION **
+
+# 팔로우
+follow_user(from_uid, to_uid):
+    from user가 to user를 팔로우할 때의 DB 데이터를 설정하는 함수
+
+    팔로잉 정보가 생성되는 단계는 다음과 같다.
+    - from -> to 관계 생성
+    - from의 following 목록에 관계 데이터 추가
+    - to의 follower 목록에 관계 데이터 추가
+
+    from_uid(int) : 팔로우를 하는 유저의 uid
+    to_uid(int) : 팔로우를 당하는 유저의 uid
+
+# 언팔로우
+unfollow_user(from_uid, to_uid):
+
+    from user가 to user를 팔로우할 때의 DB 데이터를 설정하는 함수
+
+    팔로잉 정보가 삭제되는 단계는 다음과 같다.
+    - from의 following 목록에 관계 데이터 삭제
+    - to의 follower 목록에 관계 데이터 삭제
+    - from -> to 관계 삭제
+
+    from_uid(int) : 팔로우를 끊는 유저의 uid
+    to_uid(int) : 팔로우를 끊을 유저의 uid
+
+# 팔로잉 화면 리스트
+get_user_following_list(profile_uid, request_uid):
+    해당 프로필 유저의 팔로잉 목록과 각종 정보를 얻는 함수
+    request_uid 유저가 profile_uid 유저의 팔로잉 목록을 보는 상황에 사용
+    만약 유저가 자신의 팔로잉 목록을 본다면 request_uid와 profile_uid는 같은 값이 들어가면 된다.
+    return 형식 :
+    [{
+        'is_following': request한 유저가 해당 목록의 유저를 팔로우하고 있는지 여부
+        'nickname': 목록의 유저 닉네임
+        'uid': 목록의 유저 uid
+    }]
+    is_following이 True면 팔로우 중, False면 팔로우하고 있지 않은 상황,
+    "Self"면 해당 목록의 유저가 요청한 유저(자신)이란 뜻을 나타냄
+
+    profile_uid(int) : 팔로잉 목록을 받을 유저의 uid
+    request_uid(int) : profile 유저의 팔로잉 목록을 보길 원하는 유저의 uid
+
+# 팔로우 화면 리스트
+get_user_follower_list(profile_uid, request_uid):
+    해당 프로필 유저의 팔로워 목록과 각종 정보를 얻는 함수
+    request_uid 유저가 profile_uid 유저의 팔로워 목록을 보는 상황에 사용
+    만약 유저가 자신의 팔로워 목록을 본다면 request_uid와 profile_uid는 같은 값이 들어가면 된다.
+    return 형식 :
+    [{
+        'is_following': request한 유저가 해당 목록의 유저를 팔로우하고 있는지 여부
+        'nickname': 목록의 유저 닉네임
+        'uid': 목록의 유저 uid
+    }]
+    is_following이 True면 팔로우 중, False면 팔로우하고 있지 않은 상황,
+    "Self"면 해당 목록의 유저가 요청한 유저(자신)이란 뜻을 나타냄
+
+    profile_uid(int) : 팔로워 목록을 받을 유저의 uid
+    request_uid(int) : profile 유저의 팔로워 목록을 보길 원하는 유저의 uid
+
+=========================================
+** ITEM **
+
+# 아이템 추가
+add_item(category, item_name, data_path, size):
+    ITEM DB 내 아이템을 추가하는 함수
+
+    category(str) : 아이템의 카테고리 이름
+    item_name(str) : 아이템 이름
+    data_path(str) : 아이템의 모델링 데이터 파일 경로
+    size([int, int, int]) : 아이템 사이즈 3차원 배열
+
+# 아이템 삭제
+delete_item(category, item_id):
+    카테고리 내 아이템 정보를 삭제하는 함수
+
+    category(str) : 아이템의 카테고리 이름
+    item_id(int) : 아이템의 카테고리 내 id
+
+=========================================
+** SNAPSHOT **
+** NEWSFEED **
+현재 작업 중 (머쓱타드;;)
