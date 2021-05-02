@@ -177,6 +177,100 @@ def get_user_follower_uid_list(uid):
             follower_list.append(int(follower_user_uid))
         return follower_list
 
+# 팔로잉 화면 리스트
+def get_user_following_list(profile_uid, request_uid):
+    """
+    해당 프로필 유저의 팔로잉 목록과 각종 정보를 얻는 함수
+    request_uid 유저가 profile_uid 유저의 팔로잉 목록을 보는 상황에 사용
+    만약 유저가 자신의 팔로잉 목록을 본다면 request_uid와 profile_uid는 같은 값이 들어가면 된다.
+    
+    return 형식 :
+    [{
+        'is_following': request한 유저가 해당 목록의 유저를 팔로우하고 있는지 여부
+        'nickname': 목록의 유저 닉네임
+        'uid': 목록의 유저 uid
+    }]
+    is_following이 True면 팔로우 중, False면 팔로우하고 있지 않은 상황,
+    "Self"면 해당 목록의 유저가 요청한 유저(자신)이란 뜻을 나타냄
+
+    profile_uid(int) : 팔로잉 목록을 받을 유저의 uid
+    request_uid(int) : profile 유저의 팔로잉 목록을 보길 원하는 유저의 uid
+    """
+    uid_list = get_user_following_uid_list(profile_uid)
+    # 해당 프로필의 유저가 팔로잉이 없다면 None 반환
+    if uid_list is None:
+        return None
+    
+    following_list = []
+    for user in uid_list:
+        # 목록 요청 유저가 해당 프로필 유저의 팔로잉 리스트의 유저를 팔로잉 중인지 여부 확인
+        if str(user) == str(request_uid):
+            is_following_now = "Self"
+        elif is_following(request_uid, user) is None:
+            is_following_now = False
+        else:
+            is_following_now = True
+        
+        # 팔로잉 리스트의 닉네임 정보 받아옴 
+        list_user_nickname = db.reference('PROFILE').child(str(user)).child('nickname').get()
+        
+        # 모은 정보를 key value 형식으로 저장
+        info = {
+            'uid': user,
+            'nickname' : list_user_nickname,
+            'is_following': is_following_now
+        }
+        # following_list에 추가
+        following_list.append(info)
+    return following_list
+
+# 팔로우 화면 리스트
+def get_user_follower_list(profile_uid, request_uid):
+    """
+    해당 프로필 유저의 팔로워 목록과 각종 정보를 얻는 함수
+    request_uid 유저가 profile_uid 유저의 팔로워 목록을 보는 상황에 사용
+    만약 유저가 자신의 팔로워 목록을 본다면 request_uid와 profile_uid는 같은 값이 들어가면 된다.
+    
+    return 형식 :
+    [{
+        'is_following': request한 유저가 해당 목록의 유저를 팔로우하고 있는지 여부
+        'nickname': 목록의 유저 닉네임
+        'uid': 목록의 유저 uid
+    }]
+    is_following이 True면 팔로우 중, False면 팔로우하고 있지 않은 상황,
+    "Self"면 해당 목록의 유저가 요청한 유저(자신)이란 뜻을 나타냄
+
+    profile_uid(int) : 팔로워 목록을 받을 유저의 uid
+    request_uid(int) : profile 유저의 팔로워 목록을 보길 원하는 유저의 uid
+    """
+    uid_list = get_user_follower_uid_list(profile_uid)
+    # 해당 프로필의 유저가 팔로워가 없다면 None 반환
+    if uid_list is None:
+        return None
+    
+    follower_list = []
+    for user in uid_list:
+        # 목록 요청 유저가 해당 프로필 유저의 팔로워 리스트의 유저를 팔로잉 중인지 여부 확인
+        if str(user) == str(request_uid):
+            is_following_now = "Self"
+        elif is_following(request_uid, user) is None:
+            is_following_now = False
+        else:
+            is_following_now = True
+        
+        # 팔로워 리스트의 닉네임 정보 받아옴 
+        list_user_nickname = db.reference('PROFILE').child(str(user)).child('nickname').get()
+        
+        # 모은 정보를 key value 형식으로 저장
+        info = {
+            'uid': user,
+            'nickname' : list_user_nickname,
+            'is_following': is_following_now
+        }
+        # follower_list에 추가
+        follower_list.append(info)
+    return follower_list
+
 def get_user_following_num(uid):
     """
     유저의 팔로잉 수를 받는 함수
@@ -211,7 +305,13 @@ def update_profile_following_num(uid):
     """
     following_num = get_user_following_num(uid)
     dir = db.reference('PROFILE').child(str(uid))
+
+    # 해당 uid 값이 DB에 없다면 False 출력
+    if dir.get() is None:
+        print("Invalid user uid value.")
+        return False
     dir.update({'num_following':following_num})
+    return True
 
 def update_profile_follower_num(uid):
     """
@@ -221,7 +321,12 @@ def update_profile_follower_num(uid):
     """
     follower_num = get_user_follower_num(uid)
     dir = db.reference('PROFILE').child(str(uid))
+    # 해당 uid 값이 DB에 없다면 False 출력
+    if dir.get() is None:
+        print("Invalid user uid value.")
+        return False
     dir.update({'num_follower':follower_num})
+    return True
 
 def is_following(compare_user_uid, target_user_uid):
     """
@@ -247,7 +352,7 @@ def is_following(compare_user_uid, target_user_uid):
             if relation_info is None:
                 print("Relation " + str(relation_id) + " is not exist.")
                 return None
-            elif relation_info['to_uid'] == target_user_uid:
+            elif relation_info['to_uid'] == str(target_user_uid):
                 return relation_id
 
 def add_follow_info(from_uid, to_uid, relation_id):
@@ -343,6 +448,7 @@ def delete_user_all_follow_info(uid):
 
     print("All follow information of user " + str(uid) + " is deleted.")
 
+# 팔로우
 def follow_user(from_uid, to_uid):
     """
     from user가 to user를 팔로우할 때의 DB 데이터를 설정하는 함수
@@ -366,6 +472,7 @@ def follow_user(from_uid, to_uid):
         print(str(from_uid) + " already following " + str(to_uid) + ".")
         return False
 
+# 언팔로우
 def unfollow_user(from_uid, to_uid):
     """
     from user가 to user를 팔로우할 때의 DB 데이터를 설정하는 함수
