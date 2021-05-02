@@ -12,11 +12,29 @@ if not firebase_admin._apps:
 """
 'ITEM':
 {
-    
+    'category':
+    {
+        'latest_id_num': '카테고리 내 아이템 중 id 값이 가장 큰 아이템의 id값',
+        'item_list':
+        [
+            {
+                'item_id': '아이템 ID',
+                'item_name': '아이템 이름',
+                'scale': [x, y, z],
+                'data': '아이템 데이터'
+            },
+            ...
+        ]
+    },
+    ...
 }
 """
 
-# 아이템 목록
+def increment_num(current_value):
+    """
+    item_id 값 지정을 위한 번호 트랜잭션 함수
+    """
+    return current_value + 1 if current_value else 1
 
 def get_all_item():
     """
@@ -24,18 +42,95 @@ def get_all_item():
     """
     return db.reference('ITEM').get()
 
-def add_category(category):
-    dir = db.reference('ITEM')
-    dir.push(str(category))
+def get_item(category, item_id):
+    """
+    카테고리 내 아이템 정보를 삭제하는 함수
 
-def add_item(category, item_name, iid, data_path, size):
-    dir = db.reference('ITEM').child(str(category)).child(str(item_name))
-    dir.update({
-        'iid': iid,
+    category(str) : 아이템의 카테고리 이름
+    item_id(int) : 아이템의 카테고리 내 id
+    """
+    dir = db.reference('ITEM').child(str(category)).child('item_list')
+    # 해당 카테고리에 아이템이 없다면 False 반환
+    if dir.get() is None:
+        print("There's no item in " + str(category) + " category.")
+        return False
+    
+    # 카테고리의 아이템 리스트를 탐색
+    item_list = dir.get()
+    for item in item_list:
+        # 해당 아이템의 id가 item_id와 같다면 데이터 반환
+        if int(item['item_id']) == int(item_id):
+            return item
+    
+    # 리스트에 찾는 아이템이 없으면 False 반환
+    print("There's not exist item " + str(item_id) + " in " + str(category) + "category.")
+    return False
+
+def add_item(category, item_name, data_path, size):
+    """
+    ITEM DB 내 아이템을 추가하는 함수
+
+    category(str) : 아이템의 카테고리 이름
+    item_name(str) : 아이템 이름
+    data_path(str) : 아이템의 모델링 데이터 파일 경로
+    size([int, int, int]) : 아이템 사이즈 3차원 배열
+    """
+    dir = db.reference('ITEM').child(str(category))
+
+    # 아이템의 id 값을 결정하기 위한 번호 트랜잭션 작업
+    try:
+        new_item_num = dir.child('latest_id_num').transaction(increment_num)
+        print('Transaction completed')
+    except db.TransactionAbortedError:
+        print('Transaction failed to commit')
+        return False
+    
+    # 추가할 아이템 data 선언
+    data = {
+        'item_id': new_item_num,
+        'item_name': item_name,
         'data': data_path,
         'size': size
-    })
+    }
 
+    # 해당 카테고리를 신설하는 경우
+    if dir.child('item_list').get() is None:
+        dir.update({'item_list': [data]})
+    # 해당 카테고리가 이미 존재하는 경우
+    else:
+        item_list = dir.child('item_list').get()
+        item_list.append(data)
+        dir.update({'item_list': item_list})
 
+def delete_item(category, item_id):
+    """
+    카테고리 내 아이템 정보를 삭제하는 함수
 
-# def add_item(category, )
+    category(str) : 아이템의 카테고리 이름
+    item_id(int) : 아이템의 카테고리 내 id
+    """
+    dir = db.reference('ITEM').child(str(category))
+    # 해당 카테고리에 아이템이 없다면 False 반환
+    if dir.child('item_list').get() is None:
+        print("There's no item in " + str(category) + " category.")
+        return False
+    
+    item_list = dir.child('item_list').get()
+    for item in item_list:
+        if int(item['item_id']) == int(item_id):
+            item_list.remove(item)
+            dir.update({'item_list': item_list})
+            return True
+    
+    # 리스트에 삭제하고자 하는 아이템이 없으면 False 반환
+    print("There's not exist item " + str(item_id) + " in " + str(category) + "category.")
+    return False
+
+def delete_category(category):
+    """
+    카테고리 내 모든 아이템 정보를 삭제하는 함수
+
+    category(str) : 아이템의 카테고리 이름
+    """
+    dir = db.reference('ITEM').child(str(category))
+    dir.delete()

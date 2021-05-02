@@ -54,6 +54,23 @@ def get_visitbook(uid):
 
 # 댓글 리스트 요청
 def get_comment_list(uid):
+    """
+    한 유저의 방명록 댓글의 리스트를 받는 함수
+
+    return 형식 : 
+    [
+        {
+            'cid': '댓글 cid',
+            'comment': '댓글 내용',
+            'reply_num': 답글 갯수,
+            'timestamp': '타임스탬프',
+            'writer_uid': '댓글 작성자 uid'
+        },
+        ...
+    ]
+
+    uid(int) : 해당 프로필 유저의 uid 값
+    """
     dir = db.reference('VISITBOOK').child(str(uid))
     comment_data = dir.get()
 
@@ -108,6 +125,17 @@ def get_comment_reply(uid, cid):
 def get_comment_reply_list(uid, cid):
     """
     방명록 댓글의 답글을 배열로 받는 함수
+
+    return 형식 : 
+    [
+        {
+            'reply_cid': '답글 cid',
+            'reply_comment': '답글 내용',
+            'timestamp': '타임스탬프',
+            'writer_uid': '답글 작성자 uid'
+        },
+        ...
+    ]
 
     uid(int) : 해당 프로필 유저의 uid 값
     cid(int) : 방명록 댓글 cid 값
