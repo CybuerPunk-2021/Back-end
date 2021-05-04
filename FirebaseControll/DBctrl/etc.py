@@ -33,6 +33,17 @@ def timestamp():
     now = datetime.datetime.now()
     return now.strftime('%Y-%m-%d %H:%M:%S')
 
+def check_list_3dim(list_param):
+    # 입력 parameter가 리스트 타입이어야 함
+    if type(list_param) is not list:
+        print("Requires list type.")
+        return False
+    # 3차원 리스트 값이어야 함
+    if len(list_param) is not 3:
+        print("Requires 3 dimension list.")
+        return False
+    return True
+
 def get_all_data():
     """
     DB의 모든 데이터를 출력하는 함수

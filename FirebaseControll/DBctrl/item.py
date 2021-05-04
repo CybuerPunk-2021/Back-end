@@ -2,6 +2,8 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
+from .etc import check_list_3dim
+
 from pprint import pprint
 
 if not firebase_admin._apps:
@@ -66,6 +68,7 @@ def get_item(category, item_id):
     print("There's not exist item " + str(item_id) + " in " + str(category) + "category.")
     return False
 
+# 아이템 추가
 def add_item(category, item_name, data_path, size):
     """
     ITEM DB 내 아이템을 추가하는 함수
@@ -85,6 +88,10 @@ def add_item(category, item_name, data_path, size):
         print('Transaction failed to commit')
         return False
     
+    # size parameter는 3차원 리스트 타입이어야 함
+    if check_list_3dim(size) is False:
+        return False
+
     # 추가할 아이템 data 선언
     data = {
         'item_id': new_item_num,
@@ -101,7 +108,9 @@ def add_item(category, item_name, data_path, size):
         item_list = dir.child('item_list').get()
         item_list.append(data)
         dir.update({'item_list': item_list})
+    return True
 
+# 아이템 삭제
 def delete_item(category, item_id):
     """
     카테고리 내 아이템 정보를 삭제하는 함수

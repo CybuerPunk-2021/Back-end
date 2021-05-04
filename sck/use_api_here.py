@@ -13,14 +13,16 @@ key_path = "../FirebaseControll/key/key.json"
 if isfile(key_path) is True:
     print("Importing DB controll package")
     from FirebaseControll.DBctrl import *
+    from FirebaseControll.DBctrl.snapshot import ItemObj
+    from FirebaseControll.DBctrl.snapshot import SnapshotObj
     print("Import DB controll package success.")
 else:
     print("There's no key to access Firebase DB. Please insert Key json file into ../FirebaseControll/key directory.")
     print("SYSTEM OUT")
     sys.exit()
 
-"""
 
+"""
 uid 값이 544996263인 유저의 방명록 댓글 목록을 얻고 싶다.
 -> 
 ex1)

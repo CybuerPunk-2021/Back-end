@@ -73,6 +73,7 @@ def get_all_profile():
     """
     return db.reference('PROFILE').get()
 
+# 유저 프로필
 def get_profile(uid):
     """
     유저의 프로필 내용을 불러오는 함수
