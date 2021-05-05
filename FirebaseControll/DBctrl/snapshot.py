@@ -25,7 +25,8 @@ if not firebase_admin._apps:
             'item_list': 
             [
                 {
-                    'iid': 아이템 ID,
+                    'category': 아이템 카테고리 이름
+                    'item_id': 아이템의 고유 id,
                     'position': [x, y, z], <아이템 위치>
                     'rotation': [x, y, z], <아이템 각도>
                     'scale': [x, y, z], <아이템 사이즈>
@@ -36,45 +37,89 @@ if not firebase_admin._apps:
     }
 }        
 """
+
+# 아이템 객체 class
+"""
+ItemObj : 
+{
+    'category' : 아이템 카테고리 이름,
+    'item_id' : 아이템의 고유 id,
+    'position': 아이템 위치,
+    'rotation': 아이템 각도,
+    'scale': 아이템 사이즈
+}
+"""
 class ItemObj:
-    def __init__(self, item_id, position, scale, rotation):
-        # position, scale, rotation parameter는 [int, int, int] 3차원 리스트여야 함
+    def __init__(self, category, item_id, position, scale, rotation):
+        """
+        아이템 객체 초기 생성
+        position, scale, rotation은 [int, int, int] 형식에 맞춘 값이 아니라면 None으로 초기화
+
+        category(str) : 아이템 카테고리 이름
+        item_id(int) : 아이템의 고유 id
+        position([int, int, int]) : 아이템의 위치 좌표값
+        scale([int, int, int]) : 아이템의 크기값
+        rotation([int, int, int]) : 아이템 회전값
+        """
+        self.category = category
         self.item_id = item_id
 
+        # position, scale, rotation parameter는 [int, int, int] 3차원 리스트여야 함
         if check_list_3dim(position) is False:
-            self.position = [None, None, None]
+            self.position = None
         else:
             self.position = position
         
         if check_list_3dim(scale) is False:
-            self.scale = [None, None, None]
+            self.scale = None
         else:
             self.scale = scale
 
         if check_list_3dim(rotation) is False:
-            self.rotation = [None, None, None]
+            self.rotation = None
         else:
             self.rotation = rotation
 
     def get_item(self):
+        """
+        아이템 객체 요소를 얻기 위한 함수
+        딕셔너리 형식으로 반환한다.
+        """
         if self is not None:
             return {'item_id':self.item_id, 'position':self.position, 'scale':self.scale, 'rotation':self.rotation}
         else:
             return None
 
     def get_item_id(self):
+        """
+        아이템 객체의 아이템 고유 번호를 확인
+        """
         return self.item_id
 
     def get_position(self):
+        """
+        아이템 객체의 위치 좌표값 확인
+        """
         return self.position
 
     def get_scale(self):
+        """
+        아이템 객체의 사이즈 크기 확인
+        """
         return self.scale
 
     def get_rotation(self):
+        """
+        아이템 객체의 회전값 확인
+        """
         return self.rotation
 
     def set_position(self, position):
+        """
+        아이템 객체의 위치 좌표값 설정(수정)
+
+        position([int, int, int]) : 아이템의 위치 좌표값
+        """
         # position parameter는 [int, int, int] 3차원 리스트여야 함
         if check_list_3dim(position) is False:
             return False
@@ -82,6 +127,11 @@ class ItemObj:
         return True
     
     def set_scale(self, scale):
+        """
+        아이템 객체의 위치 좌표값 설정(수정)
+
+        scale([int, int, int]) : 아이템의 크기값
+        """
         # scale parameter는 [int, int, int] 3차원 리스트여야 함
         if check_list_3dim(scale) is False:
             return False
@@ -89,26 +139,73 @@ class ItemObj:
         return True
 
     def set_rotation(self, rotation):
+        """
+        아이템 객체의 위치 좌표값 설정(수정)
+
+        rotation([int, int, int]) : 아이템 회전값
+        """
         # rotation parameter는 [int, int, int] 3차원 리스트여야 함
         if check_list_3dim(rotation) is False:
             return False
         self.rotation = rotation
         return True
 
+# 스냅샷 객체 class
 class SnapshotObj:
     def __init__(self, version, snapshot_intro, thumbnail, item_list = []):
+        """
+        스냅샷 객체 초기 생성
+
+        version(str) : 스냅샷의 버전값
+        snapshot_intro(str) : 스냅샷 간단 코멘트
+        thumbnail(str) : 스냅샷 썸네일 이미지 경로
+        item_list([ItemObj,...]) : 스냅샷 내 배치된 아이템 객체 리스트
+        """    
         self.version = version
         self.snapshot_intro = snapshot_intro
         self.thumbnail = thumbnail
         self.item_list = item_list
 
+    def get_snapshot_object(self):
+        """
+        스냅샷 객체 내용 확인
+        딕셔너리 형태로 반환한다.
+        """
+        return {'version':self.version, 'snapshot_intro':self.snapshot_intro, 'thumbnail':self.thumbnail, 'item_list':self.item_list}
+
     def get_snapshot_object_version(self):
+        """
+        스냅샷 객체의 버전값 확인
+        """
         return self.version
     
     def get_snapshot_object_intro(self):
+        """
+        스냅샷 객체의 간단 코멘트 내용 확인
+        """
         return self.snapshot_intro
 
+    def get_snapshot_object_thumbnail(self):
+        return self.thumbnail
+
+    def get_snapshot_object_item_list(self):
+        # 스냅샷 객체에 아이템이 없다면 None 반환
+        if self.item_list is None:
+            return None
+        
+        item_list = []
+        for item in self.item_list:
+            item_list.append(item.get_item())
+        print(item_list)
+        return item_list
+
     def put_item(self, item_obj):
+        """
+        스냅샷 객체에 아이템을 배치하는 함수
+        아이템 객체를 스냅샷 객체의 self.item_list에 추가
+        
+        item_obj(ItemObj) : 추가할 아이템 객체
+        """
         # item_obj의 타입이 ItemObj인지 확인
         if type(item_obj) is not ItemObj:
             print("'item_obj' type is not matched. Put ItemObj type object.")
@@ -119,31 +216,30 @@ class SnapshotObj:
             print("Invalid item object.")
             return False
         
+        # 아이템 객체의 position, scale, rotation 값이 올바르게 들어갔는지 확인
+        # 3차원 list 값이 아니라면 False 반환, 종료
+        if etc.check_3dim(item_obj.get_position()) is False:
+            print("Invalid position value")
+            return False
+        if etc.check_3dim(item_obj.get_scale()) is False:
+            print("Invalid scale value")
+            return False
+        if etc.check_3dim(item_obj.get_rotation()) is False:
+            print("Invalid rotation value")
+            return False
+        
         # 스냅샷 객체에 item_obj 아이템 객체를 리스트에 추가
         self.item_list.append(new_item.get_item())
     
-    """
-    def put_item_old(self, item_id, position, scale, rotation):
-        new_item = ItemObj(item_id, position, scale, rotation)
-        if new_item is not None:
-            self.item_list.append(new_item.get_item())
-            return True
-        else:
-            return False
-    """
-    
-    def get_snapshot_object(self):
-        return {'version':self.version, 'thumbnail':self.thumbnail, 'like_user':self.like_user, 'item_list':self.item_list}
-
 def get_all_snapshot():
     """
-    모든 스냅샷 정보를 불러오는 함수
+    DB에 저장된 모든 스냅샷 정보를 불러오는 함수
     """
     return db.reference('SNAPSHOT').get()
 
 def get_user_snapshot(uid):
     """
-    유저가 생성한 스냅샷 데이터를 얻는 함수
+    DB에서 유저가 생성한 스냅샷 데이터를 얻는 함수
 
     uid(int) : 스냅샷 데이터를 얻을 유저의 uid
     """
@@ -158,7 +254,7 @@ def get_user_snapshot(uid):
 
 def get_snapshot(uid, timestamp):
     """
-    유저가 해당 시간대에 생성한 스냅샷 데이터를 얻는 함수
+    DB에서 유저가 해당 시간대에 생성한 스냅샷 데이터를 얻는 함수
 
     uid(int) : 스냅샷 데이터를 얻을 유저의 uid
     timestamp(str) : 스냅샷 생성 타임스탬프
@@ -175,7 +271,7 @@ def get_snapshot(uid, timestamp):
 # 스냅샷 아이템 리스트
 def get_snapshot_item(uid, timestamp):
     """
-    해당 스냅샷의 아이템 목록 리스트를 얻는 함수
+    DB에 저장된 해당 스냅샷의 아이템 목록 리스트를 얻는 함수
 
     uid(int) : 스냅샷 데이터를 얻을 유저의 uid
     timestamp(str) : 스냅샷 생성 타임스탬프
@@ -188,9 +284,9 @@ def get_snapshot_item(uid, timestamp):
         return dir.get()
 
 # 스냅샷 생성
-def make_new_snapshot(uid, timestamp, room_snapshot):
+def save_snapshot(uid, timestamp, room_snapshot):
     """
-    유저가 새 스냅샷을 생성하는 함수
+    유저가 새 스냅샷을 DB에 저장하는 함수
     해당 함수 사용 시 room_snapshot parameter는 SnapshotObj 객체를 넣어야 한다.
     DB 저장 성공 시 스냅샷 버전 반환, 실패 시 False 반환
 
@@ -198,15 +294,28 @@ def make_new_snapshot(uid, timestamp, room_snapshot):
     timestamp(str) : 스냅샷 생성 타임스탬프, 이 값이 스냅샷의 메인 키가 된다.
     room_snapshot(SnapshotObj) : 스냅샷 정보 Snapshot 인스턴스
     """
+    # parameter의 room_snapshot의 타입이 SnapshotObj이 아닐 경우 중지, False 반환
     dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
-    
-    # parameter의 room_snapshot의 타입이 Snapshot일 경우 생성
-    if type(room_snapshot) == Snapshot:
-        dir.set(room_snapshot.get_snapshot())
-        return dir.child('version').get()
-    else:
-        print("Invalid snapshot data.")
+    if type(room_snapshot) != SnapshotObj:
+        print("Invalid type of snapshot data. Put SnapshotObj type.")
         return False
+    
+    # 저장하려는 스냅샷의 버전과 같은 버전값의 스냅샷이 있으면 중지, False 반환 
+    dir = db.reference('SNAPSHOT').child(str(uid))
+    snapshot_obj_version = room_snapshot.get_snapshot_object_version()
+    if dir.order_by_child('version').equal_to(snapshot_obj_version).get() is not None:
+        print("There's already exist same version snapshot in DB.")
+        return False
+
+    # 올바른 정보를 입력했다면 DB에 저장, 해당 스냅샷의 버전 값 반환
+    dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
+    dir.set({
+        'version': room_snapshot.get_snapshot_object_version(),
+        'snapshot_intro': room_snapshot.get_snapshot_object_intro(),
+        'thumbnail': room_snapshot.get_snapshot_object_thumbnail(),
+        'item_list': room_snapshot.get_snapshot_object_item_list()
+    })
+    return dir.child('version').get()
 
 # 스냅샷 소개글 수정
 def modify_snapshot_intro(uid, timestamp, modified_intro):
@@ -315,7 +424,7 @@ def get_snapshot_like_num(uid, timestamp):
 # 스냅샷 삭제
 def delete_snapshot(uid, timestamp):
     """
-    유저가 생성한 스냅샷을 삭제하는 함수
+    유저가 생성한 스냅샷을 DB에서 삭제하는 함수
 
     uid(int) : 스냅샷을 만든 유저의 uid
     timestamp(str) : 스냅샷의 타임스탬프 값
