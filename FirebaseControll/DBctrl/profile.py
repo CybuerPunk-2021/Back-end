@@ -23,7 +23,9 @@ if not firebase_admin._apps:
         'bg_image': '백그라운드 이미지, image_path',
         'introduction': '간단 소개글',
         'login_id': 'USERINFO의 로그인 아이디',
+        'login_id_upper': 'USERINFO의 로그인 아이디 색인용 대문자 버전',
         'nickname': '닉네임',
+        'nickname_upper': '닉네임 색인용 대문자 버전',
         'num_follower': 팔로워 수,
         'num_following': 팔로잉 수,
         'profile_image': '프로필 이미지, image_path',
@@ -101,6 +103,26 @@ def get_profile_nickname(uid):
     """
     return db.reference('PROFILE').child(str(uid)).child('nickname').get()
 
+def search_profile_nickname(nickname):
+    """
+    문자열이 닉네임으로 문자열에 있는 유저를 찾는 함수
+    """
+    data = db.reference('PROFILE').order_by_child('nickname_upper').start_at(str(nickname.upper())).end_at(str(nickname.upper()) + '\uf8ff').get()
+    if len(data) == 0:
+        return None
+    else:
+        return data
+
+def search_profile_login_id(login_id):
+    return db.reference('PROFILE').order_by_child('login_id_upper').start_at(str(login_id.upper())).end_at(str(login_id.upper()) + '\uf8ff').get()
+    if len(data) == 0:
+        return None
+    else:
+        return data
+
+def search_profile(input_string):
+    return [search_profile_nickname(input_string), search_profile_login_id(input_string)]
+
 def make_profile(uid, login_id, nickname):
     """
     해당 uid 값으로 초기 프로필 데이터를 세팅하는 함수
@@ -117,7 +139,9 @@ def make_profile(uid, login_id, nickname):
             'bg_image': None,
             'introduction': 'Hello',
             'login_id': str(login_id),
+            'login_id_upper': str(login_id).upper(),
             'nickname': str(nickname),
+            'nickname_upper': str(nickname).upper(),
             'num_follower': 0,
             'num_following': 0,
             'profile_image': None,
@@ -143,7 +167,10 @@ def modify_nickname(uid, new_name):
     if dir.get() is not None:
         # 다른 유저들이 사용하지 않는 닉네임일 때 변경
         if is_profile_nickname_exist(new_name) is False:
-            dir.update({'nickname':new_name})
+            dir.update({
+                'nickname': new_name,
+                'nickname_upper': new_name.upper()
+                })
             return True
         else:
             print("Already used nickname value.")
