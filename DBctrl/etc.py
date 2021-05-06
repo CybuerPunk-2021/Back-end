@@ -7,7 +7,7 @@ from hashlib import sha256
 import datetime
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("../FirebaseControll/key/key.json")
+    cred = credentials.Certificate("./key/key.json")
     firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
 
 # 기타 조작 함수
