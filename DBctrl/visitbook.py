@@ -159,14 +159,15 @@ def get_comment_reply_list(uid, cid):
     return reply_list
 
 # 방명록 댓글 추가
-def add_comment(uid, writer_uid, comment):
+def add_comment(uid, writer_uid, comment, timestamp):
     """
     유저 프로필 내 방명록에 댓글을 남기는 함수
-    성공하면 True, 실패하면 False 반환
+    성공하면 타임스탬프 값을, 실패하면 False 반환
     
     uid(int) : 해당 프로필 유저의 uid 값
     writer_uid(int) : 댓글 작성 유저의 uid 값
     comment(str) : 댓글 내용
+    timestamp(str) : 서버 시계 기준 방명록 댓글 추가 시각
     """
     # 방명록 주인인 uid 유저가 프로필 데이터가 없으면 False 반환
     if is_profile_exist(str(uid)) is False:
@@ -189,21 +190,23 @@ def add_comment(uid, writer_uid, comment):
     new_comment.set({
         'writer_uid': writer_uid,
         'comment': comment,
-        'timestamp': timestamp(),
+        'timestamp': timestamp,
         'reply': None
     })
     print("Add comment in " + str(uid) + "`s visitbook.")
-    return True
+    return new_comment.child('timestamp').get()
 
 # 방명록 댓글의 답글 추가
-def add_comment_reply(uid, cid, writer_uid, reply_comment):
+def add_comment_reply(uid, cid, writer_uid, reply_comment, timestamp):
     """
     방명록 댓글에 답글을 남기는 함수
+    성공하면 타임스탬프 값을, 실패하면 False 반환
     
     uid(int) : 해당 프로필 유저의 uid 값
     cid(str) : 답글을 달 댓글의 cid 값
     writer_uid(int) : 답글 작성 유저의 uid 값
     reply_comment(str) : 답글 내용 문자열
+    timestamp(str) : 서버 시계 기준 방명록 댓글의 답글 추가 시각
     """
     # 방명록 주인인 uid 유저가 프로필 데이터가 없으면 False 반환
     if is_profile_exist(str(uid)) is False:
@@ -227,19 +230,21 @@ def add_comment_reply(uid, cid, writer_uid, reply_comment):
     new_reply.set({
         'writer_uid': writer_uid,
         'reply_comment': reply_comment,
-        'timestamp': timestamp(),
+        'timestamp': timestamp,
     })
-    return True
+    return new_reply.child('timestamp').get()
 
 # 방명록 댓글 수정
-def modify_comment(uid, cid, writer_uid, modified_comment):
+def modify_comment(uid, cid, writer_uid, modified_comment, timestamp):
     """
     방명록 댓글 내용을 수정하는 함수
+    성공하면 타임스탬프 값을, 실패하면 False 반환
     
     uid(int) : 해당 프로필 유저의 uid 값
     cid(str) : 답글을 달 댓글의 cid 값
     writer_uid(int) : 댓글 작성 유저의 uid 값
     modified_comment(str) : 수정할 댓글 내용
+    timestamp(str) : 서버 시계 기준 방명록 댓글 수정 시각
     """
     # 방명록 주인인 uid 유저가 프로필 데이터가 없으면 False 반환
     if is_profile_exist(str(uid)) is False:
@@ -271,19 +276,21 @@ def modify_comment(uid, cid, writer_uid, modified_comment):
     # 모든 값이 유효하다면 DB에 댓글 등록
     dir.update({
         'comment': modified_comment,
-        'timestamp': timestamp()
+        'timestamp': timestamp
     })
     print(str(uid) + "`s visitbook comment " + str(cid) + " modified.")
-    return True
+    return dir.child('timestamp').get()
 
 # 방명록 댓글의 답글 수정
-def modify_comment_reply(uid, cid, reply_cid, modified_reply_comment):
+def modify_comment_reply(uid, cid, reply_cid, modified_reply_comment, timestamp):
     """
     방명록 댓글의 답글 내용을 수정하는 함수
+    성공하면 타임스탬프 값을, 실패하면 False 반환
     
     uid(int) : 해당 프로필 유저의 uid 값
     cid(str) : 답글을 달 댓글의 cid 값
     modified_comment(str) : 수정할 댓글 내용
+    timestamp(str) : 서버 시계 기준 방명록 댓글의 답글 수정 시각
     """
     # 방명록 주인인 uid 유저가 프로필 데이터가 없으면 False 반환
     if is_profile_exist(str(uid)) is False:
@@ -321,10 +328,10 @@ def modify_comment_reply(uid, cid, reply_cid, modified_reply_comment):
     # 모든 값이 유효하다면 DB에 댓글 등록
     dir.update({
         'reply_comment': modified_reply_comment,
-        'timestamp': timestamp()
+        'timestamp': timestamp
     })
     print(str(uid) + "`s visitbook comment " + str(cid) + " modified.")
-    return True
+    return dir.child('timestamp').get()
 
 def delete_comment(uid, cid):
     """

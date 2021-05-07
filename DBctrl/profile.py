@@ -7,6 +7,8 @@ from .follow import get_user_follower_num
 from .follow import update_profile_following_num
 from .follow import update_profile_follower_num
 from .follow import delete_user_all_follow_info
+from .snapshot import SnapshotObj
+from .snapshot import get_user_latest_made_snapshot
 
 from pprint import pprint
 
@@ -31,11 +33,10 @@ if not firebase_admin._apps:
         'profile_image': '프로필 이미지, image_path',
         'snapshot_info':
         {
-            'comment': '스냅샷 코멘트',
-            'like': 스냅샷 좋아요 수,
+            'snapshot_intro': '스냅샷 코멘트',
+            'like_num': 스냅샷 좋아요 수,
             'thumbnail': '스냅샷 썸네일 이미지, image_path',
             'timestamp': '스냅샷 생성 시기',
-            'version': '스냅샷 버전'
         }
     }
 }
@@ -49,10 +50,7 @@ def is_profile_exist(uid):
     uid(int) : 찾고자 하는 유저의 uid
     """
     dir = db.reference('PROFILE').child(str(uid))
-    if dir.get() is not None:
-        return True
-    else:
-        return False
+    return dir.get() is not None
 
 def is_profile_nickname_exist(nickname):
     """
@@ -64,10 +62,7 @@ def is_profile_nickname_exist(nickname):
     dir = db.reference('PROFILE')
     founded_info = dir.order_by_child('nickname').equal_to(nickname).get()
 
-    if len(founded_info) > 0:
-        return True
-    else:
-        return False
+    return len(founded_info) > 0
 
 def get_all_profile():
     """
@@ -105,22 +100,30 @@ def get_profile_nickname(uid):
 
 def search_profile_nickname(nickname):
     """
-    문자열이 닉네임으로 문자열에 있는 유저를 찾는 함수
+    해당 문자열을 포함하는 닉네임을 가진 유저를 검색하는 함수
+
+    nickname(str) : 닉네임 검색 키워드
     """
-    data = db.reference('PROFILE').order_by_child('nickname_upper').start_at(str(nickname.upper())).end_at(str(nickname.upper()) + '\uf8ff').get()
-    if len(data) == 0:
-        return None
-    else:
-        return data
+    data = db.reference('PROFILE').order_by_child('nickname_upper').start_at(str(nickname.upper())).end_at(str(nickname.upper()) + '\uf8ff').get() or []
+    return len(data)
 
 def search_profile_login_id(login_id):
-    return db.reference('PROFILE').order_by_child('login_id_upper').start_at(str(login_id.upper())).end_at(str(login_id.upper()) + '\uf8ff').get()
-    if len(data) == 0:
-        return None
-    else:
-        return data
+    """
+    해당 문자열을 포함하는 로그인 아이디를 가진 유저를 검색하는 함수
 
+    login_id(str) : 로그인 아이디 검색 키워드
+    """
+    data = db.reference('PROFILE').order_by_child('login_id_upper').start_at(str(login_id.upper())).end_at(str(login_id.upper()) + '\uf8ff').get() or []
+    return len(data)
+
+# 프로필 검색
 def search_profile(input_string):
+    """
+    해당 문자열을 포함하는 닉네임, 로그인 아이디를 가진 유저를 검색하는 함수
+    닉네임 검색 결과, 로그인 아이디 검색 결과를 각각 배열 2개의 인자로 return
+
+    input_string(str) : 검색 키워드 문자열
+    """
     return [search_profile_nickname(input_string), search_profile_login_id(input_string)]
 
 def make_profile(uid, login_id, nickname):
@@ -178,6 +181,31 @@ def modify_nickname(uid, new_name):
     else:
         print("Invalid UID value.")
         return False
+
+def modify_snapshot_preview(uid):
+    """
+    프로필 화면에 보여줄 스냅샷 정보를 제일 최근 만든 스냅샷 정보로 교체하는 함수
+
+    uid(str) : 해당 프로필 유저의 uid
+    """
+    dir = db.reference('PROFILE').child(str(uid)).child('snapshot_info')
+    # 제일 최근 생성한 스냅샷이 없다면 종료
+    if get_user_latest_made_snapshot(uid) is None:
+        return
+    
+    timestamp, snapshot_data = get_user_latest_made_snapshot(uid)
+    # 현재 프로필의 최신 스냅샷 정보가 유지되고 있다면 종료 
+    if dir.child('timestamp').get == timestamp
+        return
+    
+    # 프로필에 이전 스냅샷 정보가 있다면 최신 스냅샷으로 교체
+    dir.set({
+        'snapshot_intro': snapshot_data['snapshot_intro'],
+        'like_num': len(snapshot_data['like_uid'] or []),
+        'thumbnail': snapshot_data['thumbnail'],
+        'timestamp': timestamp,
+    })
+    return dir.child('timestamp').get()
 
 # 간단 소개글 변경
 def modify_introduction(uid, new_intro):

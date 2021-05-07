@@ -4,39 +4,12 @@ from firebase_admin import db
 
 from .etc import check_list_3dim
 
+from datetime import datetime, timedelta
 from pprint import pprint
 
 if not firebase_admin._apps:
     cred = credentials.Certificate("./key/key.json")
     firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
-
-# SNAPSHOT 데이터베이스 구조
-"""
-'SNAPSHOT':
-{
-    'uid':
-    {
-        'timestamp':
-        {
-            'version': '스냅샷 버전',
-            'snapshot_intro': '스냅샷 소개글',
-            'thumbnail': '스냅샷 썸네일 이미지 경로',
-            'like_user' : [좋아요 표시한 유저 uid,...],
-            'item_list': 
-            [
-                {
-                    'category': 아이템 카테고리 이름
-                    'item_id': 아이템의 고유 id,
-                    'position': [x, y, z], <아이템 위치>
-                    'rotation': [x, y, z], <아이템 각도>
-                    'scale': [x, y, z], <아이템 사이즈>
-                },
-                ...
-            ]
-        }
-    }
-}        
-"""
 
 # 아이템 객체 class
 """
@@ -49,6 +22,17 @@ ItemObj :
     'scale': 아이템 사이즈
 }
 """
+# 스냅샷 객체 class
+"""
+SnapshotObj : 
+{
+    'snapshot_intro': 스냅샷 간단 코멘트
+    'thumbnail': 스냅샷 썸네일 이미지 경로
+    'item_list': 스냅샷 내 배치된 아이템 객체 리스트
+}
+"""
+
+# 아이템 객체 class
 class ItemObj:
     def __init__(self, category, item_id, position, scale, rotation):
         """
@@ -152,16 +136,14 @@ class ItemObj:
 
 # 스냅샷 객체 class
 class SnapshotObj:
-    def __init__(self, version, snapshot_intro, thumbnail, item_list = []):
+    def __init__(self, snapshot_intro, thumbnail, item_list = []):
         """
         스냅샷 객체 초기 생성
 
-        version(str) : 스냅샷의 버전값
         snapshot_intro(str) : 스냅샷 간단 코멘트
         thumbnail(str) : 스냅샷 썸네일 이미지 경로
         item_list([ItemObj,...]) : 스냅샷 내 배치된 아이템 객체 리스트
         """    
-        self.version = version
         self.snapshot_intro = snapshot_intro
         self.thumbnail = thumbnail
         self.item_list = item_list
@@ -171,13 +153,7 @@ class SnapshotObj:
         스냅샷 객체 내용 확인
         딕셔너리 형태로 반환한다.
         """
-        return {'version':self.version, 'snapshot_intro':self.snapshot_intro, 'thumbnail':self.thumbnail, 'item_list':self.item_list}
-
-    def get_snapshot_object_version(self):
-        """
-        스냅샷 객체의 버전값 확인
-        """
-        return self.version
+        return {'snapshot_intro':self.snapshot_intro, 'thumbnail':self.thumbnail, 'item_list':self.item_list}
     
     def get_snapshot_object_intro(self):
         """
@@ -230,7 +206,35 @@ class SnapshotObj:
         
         # 스냅샷 객체에 item_obj 아이템 객체를 리스트에 추가
         self.item_list.append(new_item.get_item())
-    
+
+# SNAPSHOT 데이터베이스 구조
+"""
+'SNAPSHOT':
+{
+    'uid':
+    {
+        'timestamp':
+        {
+            'snapshot_intro': '스냅샷 소개글',
+            'thumbnail': '스냅샷 썸네일 이미지 경로',
+            'like_user': [좋아요 표시한 유저 uid,...],
+            'item_list': 
+            [
+                {
+                    'category': 아이템 카테고리 이름
+                    'item_id': 아이템의 고유 id,
+                    'position': [x, y, z], <아이템 위치>
+                    'rotation': [x, y, z], <아이템 각도>
+                    'scale': [x, y, z], <아이템 사이즈>
+                },
+                ...
+            ]
+        },
+        ...
+    }
+}        
+"""
+
 def get_all_snapshot():
     """
     DB에 저장된 모든 스냅샷 정보를 불러오는 함수
@@ -268,6 +272,15 @@ def get_snapshot(uid, timestamp):
     else:
         return dir.get()
 
+def get_user_latest_made_snapshot(uid):
+    """
+    해당 유저가 제일 최근에 만든 스냅샷 정보를 얻는 함수
+
+    uid(int) : 최근 스냅샷 데이터를 얻을 유저의 uid
+    """
+    latest_snapshot = db.reference('SNAPSHOT').child(str(uid)).order_by_value().limit_to_last(1).get() or None
+    return latest_snapshot
+
 # 스냅샷 아이템 리스트
 def get_snapshot_item(uid, timestamp):
     """
@@ -282,6 +295,31 @@ def get_snapshot_item(uid, timestamp):
         return None
     else:
         return dir.get()
+
+def sync_profile_snapshot_preview(uid):
+    """
+    프로필 화면에 보여줄 스냅샷 정보를 제일 최근 만든 스냅샷 정보로 교체하는 함수
+
+    uid(str) : 해당 프로필 유저의 uid
+    """
+    dir = db.reference('PROFILE').child(str(uid)).child('snapshot_info')
+    # 제일 최근 생성한 스냅샷이 없다면 종료
+    if get_user_latest_made_snapshot(uid) is None:
+        return
+    
+    timestamp, snapshot_data = get_user_latest_made_snapshot(uid)
+    # 현재 프로필의 최신 스냅샷 정보가 유지되고 있다면 종료 
+    if dir.child('timestamp').get == timestamp
+        return
+    
+    # 프로필에 이전 스냅샷 정보가 있다면 최신 스냅샷으로 교체
+    dir.set({
+        'snapshot_intro': snapshot_data['snapshot_intro'],
+        'like_num': len(snapshot_data['like_uid'] or []),
+        'thumbnail': snapshot_data['thumbnail'],
+        'timestamp': timestamp,
+    })
+    return dir.child('timestamp').get()
 
 # 스냅샷 생성
 def save_snapshot(uid, timestamp, room_snapshot):
@@ -299,23 +337,19 @@ def save_snapshot(uid, timestamp, room_snapshot):
     if type(room_snapshot) != SnapshotObj:
         print("Invalid type of snapshot data. Put SnapshotObj type.")
         return False
-    
-    # 저장하려는 스냅샷의 버전과 같은 버전값의 스냅샷이 있으면 중지, False 반환 
-    dir = db.reference('SNAPSHOT').child(str(uid))
-    snapshot_obj_version = room_snapshot.get_snapshot_object_version()
-    if dir.order_by_child('version').equal_to(snapshot_obj_version).get() is not None:
-        print("There's already exist same version snapshot in DB.")
-        return False
 
     # 올바른 정보를 입력했다면 DB에 저장, 해당 스냅샷의 버전 값 반환
     dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
     dir.set({
-        'version': room_snapshot.get_snapshot_object_version(),
         'snapshot_intro': room_snapshot.get_snapshot_object_intro(),
         'thumbnail': room_snapshot.get_snapshot_object_thumbnail(),
         'item_list': room_snapshot.get_snapshot_object_item_list()
     })
-    return dir.child('version').get()
+
+    # 유저의 프로필 내 최신 스냅샷 정보 동기화
+    sync_profile_snapshot_preview(uid)
+
+    return dir.child('timestamp').get()
 
 # 스냅샷 소개글 수정
 def modify_snapshot_intro(uid, timestamp, modified_intro):
@@ -330,6 +364,10 @@ def modify_snapshot_intro(uid, timestamp, modified_intro):
     
     if dir.get() is not None:
         dir.update({'snapshot_intro':modified_intro})
+        
+        # 유저의 프로필 내 최신 스냅샷 정보 동기화
+        sync_profile_snapshot_preview(uid)
+
         print("Modify snapshot introduction success.")
         return True
     else:
@@ -416,10 +454,7 @@ def get_snapshot_like_num(uid, timestamp):
     """
     user_list = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp)).child('like_user').get()
     
-    if user_list is None:
-        return 0
-    else:
-        return len(user_list)
+    return len(user_list) or 0
 
 # 스냅샷 삭제
 def delete_snapshot(uid, timestamp):
@@ -433,6 +468,10 @@ def delete_snapshot(uid, timestamp):
     
     if dir.get() is not None:
         dir.delete()
+
+        # 유저의 프로필 내 최신 스냅샷 정보 동기화
+        sync_profile_snapshot_preview(uid)
+
         print("Delete " + str(uid) + ", " + str(timestamp) + " snapshot success.")
         return True
     else:
