@@ -1,5 +1,3 @@
-import firebase_admin
-from firebase_admin import credentials
 from firebase_admin import db
 
 from .etc import check_list_3dim
@@ -63,7 +61,13 @@ class ItemObj:
         딕셔너리 형식으로 반환한다.
         """
         if self is not None:
-            return {'iid':self.iid, 'position':self.position, 'scale':self.scale, 'rotation':self.rotation}
+            return {
+                'category': self.category,
+                'iid':self.iid,
+                'position':self.position,
+                'scale':self.scale,
+                'rotation':self.rotation
+                }
         else:
             return None
 

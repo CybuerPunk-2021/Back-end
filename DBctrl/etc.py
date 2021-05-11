@@ -1,13 +1,8 @@
 import firebase_admin
-from firebase_admin import credentials
 from firebase_admin import db
 
 from hashlib import sha256
 import datetime
-
-if not firebase_admin._apps:
-    cred = credentials.Certificate("./key/key.json")
-    firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
 
 # 기타 조작 함수
 
@@ -30,7 +25,7 @@ def hash_password(password):
     
 def timestamp():
     now = datetime.datetime.now()
-    return now.strftime('%Y-%m-%d %H:%M:%S')
+    return now.strftime('%Y-%m-%d %H:%M:%S.%f')
 
 def check_list_3dim(list_param):
     # 입력 parameter가 리스트 타입이어야 함
