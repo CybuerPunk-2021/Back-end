@@ -343,16 +343,15 @@ def is_following(compare_user_uid, target_user_uid):
     if relation_list is None:
         print("User " + str(compare_user_uid) + " doesn't follow anybody now.")
         return None
-    # compare 유저가 한 명 이상 팔로우하고 있다면 진행
-    else:
-        # 리스트의 관계를 순차탐색
-        for relation_id in relation_list:
-            relation_info = get_relation(relation_id)
-            if relation_info is None:
-                print("Relation " + str(relation_id) + " is not exist.")
-                return None
-            elif relation_info['to_uid'] == str(target_user_uid):
-                return relation_id
+        
+    # 리스트의 관계를 순차탐색
+    for relation_id in relation_list:
+        relation_info = get_relation(relation_id)
+        if relation_info is None:
+            print("Relation " + str(relation_id) + " is not exist.")
+            return None
+        if relation_info['to_uid'] == str(target_user_uid):
+            return relation_id
 
 def add_follow_info(from_uid, to_uid, relation_id):
     """

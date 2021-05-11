@@ -237,11 +237,11 @@ add_item(category, item_name, data_path, size):
     size([int, int, int]) : 아이템 사이즈 3차원 배열
 
 # 아이템 삭제
-delete_item(category, item_id):
+delete_item(category, iid):
     카테고리 내 아이템 정보를 삭제하는 함수
 
     category(str) : 아이템의 카테고리 이름
-    item_id(int) : 아이템의 카테고리 내 id
+    iid(int) : 아이템의 카테고리 내 id
 
 =========================================
 ** SNAPSHOT **

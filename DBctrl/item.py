@@ -20,7 +20,7 @@ if not firebase_admin._apps:
         'item_list':
         [
             {
-                'item_id': '아이템 ID',
+                'iid': '아이템 ID',
                 'item_name': '아이템 이름',
                 'scale': [x, y, z],
                 'data': '아이템 데이터'
@@ -34,7 +34,7 @@ if not firebase_admin._apps:
 
 def increment_num(current_value):
     """
-    item_id 값 지정을 위한 번호 트랜잭션 함수
+    iid 값 지정을 위한 번호 트랜잭션 함수
     """
     return current_value + 1 if current_value else 1
 
@@ -44,12 +44,12 @@ def get_all_item():
     """
     return db.reference('ITEM').get()
 
-def get_item(category, item_id):
+def get_item(category, iid):
     """
     카테고리 내 아이템 정보를 삭제하는 함수
 
     category(str) : 아이템의 카테고리 이름
-    item_id(int) : 아이템의 카테고리 내 id
+    iid(int) : 아이템의 카테고리 내 id
     """
     dir = db.reference('ITEM').child(str(category)).child('item_list')
     # 해당 카테고리에 아이템이 없다면 False 반환
@@ -60,12 +60,12 @@ def get_item(category, item_id):
     # 카테고리의 아이템 리스트를 탐색
     item_list = dir.get()
     for item in item_list:
-        # 해당 아이템의 id가 item_id와 같다면 데이터 반환
-        if int(item['item_id']) == int(item_id):
+        # 해당 아이템의 id가 iid와 같다면 데이터 반환
+        if int(item['iid']) == int(iid):
             return item
     
     # 리스트에 찾는 아이템이 없으면 False 반환
-    print("There's not exist item " + str(item_id) + " in " + str(category) + "category.")
+    print("There's not exist item " + str(iid) + " in " + str(category) + "category.")
     return False
 
 # 아이템 추가
@@ -94,7 +94,7 @@ def add_item(category, item_name, data_path, size):
 
     # 추가할 아이템 data 선언
     data = {
-        'item_id': new_item_num,
+        'iid': new_item_num,
         'item_name': item_name,
         'data': data_path,
         'size': size
@@ -111,12 +111,12 @@ def add_item(category, item_name, data_path, size):
     return True
 
 # 아이템 삭제
-def delete_item(category, item_id):
+def delete_item(category, iid):
     """
     카테고리 내 아이템 정보를 삭제하는 함수
 
     category(str) : 아이템의 카테고리 이름
-    item_id(int) : 아이템의 카테고리 내 id
+    iid(int) : 아이템의 카테고리 내 id
     """
     dir = db.reference('ITEM').child(str(category))
     # 해당 카테고리에 아이템이 없다면 False 반환
@@ -126,13 +126,13 @@ def delete_item(category, item_id):
     
     item_list = dir.child('item_list').get()
     for item in item_list:
-        if int(item['item_id']) == int(item_id):
+        if int(item['iid']) == int(iid):
             item_list.remove(item)
             dir.update({'item_list': item_list})
             return True
     
     # 리스트에 삭제하고자 하는 아이템이 없으면 False 반환
-    print("There's not exist item " + str(item_id) + " in " + str(category) + "category.")
+    print("There's not exist item " + str(iid) + " in " + str(category) + "category.")
     return False
 
 def delete_category(category):

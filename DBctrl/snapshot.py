@@ -4,19 +4,18 @@ from firebase_admin import db
 
 from .etc import check_list_3dim
 
-from datetime import datetime, timedelta
 from pprint import pprint
 
 if not firebase_admin._apps:
     cred = credentials.Certificate("./key/key.json")
-    firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
+    firebase_admin.initialize_app(cred,{'databaseURL': 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
 
 # 아이템 객체 class
 """
 ItemObj : 
 {
     'category' : 아이템 카테고리 이름,
-    'item_id' : 아이템의 고유 id,
+    'iid' : 아이템의 고유 id,
     'position': 아이템 위치,
     'rotation': 아이템 각도,
     'scale': 아이템 사이즈
@@ -34,19 +33,19 @@ SnapshotObj :
 
 # 아이템 객체 class
 class ItemObj:
-    def __init__(self, category, item_id, position, scale, rotation):
+    def __init__(self, category, iid, position, scale, rotation):
         """
         아이템 객체 초기 생성
         position, scale, rotation은 [int, int, int] 형식에 맞춘 값이 아니라면 None으로 초기화
 
         category(str) : 아이템 카테고리 이름
-        item_id(int) : 아이템의 고유 id
+        iid(int) : 아이템의 고유 id
         position([int, int, int]) : 아이템의 위치 좌표값
         scale([int, int, int]) : 아이템의 크기값
         rotation([int, int, int]) : 아이템 회전값
         """
         self.category = category
-        self.item_id = item_id
+        self.iid = iid
 
         # position, scale, rotation parameter는 [int, int, int] 3차원 리스트여야 함
         if check_list_3dim(position) is False:
@@ -70,15 +69,15 @@ class ItemObj:
         딕셔너리 형식으로 반환한다.
         """
         if self is not None:
-            return {'item_id':self.item_id, 'position':self.position, 'scale':self.scale, 'rotation':self.rotation}
+            return {'iid':self.iid, 'position':self.position, 'scale':self.scale, 'rotation':self.rotation}
         else:
             return None
 
-    def get_item_id(self):
+    def get_iid(self):
         """
         아이템 객체의 아이템 고유 번호를 확인
         """
-        return self.item_id
+        return self.iid
 
     def get_position(self):
         """
@@ -171,8 +170,8 @@ class SnapshotObj:
         
         item_list = []
         for item in self.item_list:
-            item_list.append(item.get_item())
-        print(item_list)
+            item_list.append(item)
+        
         return item_list
 
     def put_item(self, item_obj):
@@ -188,24 +187,24 @@ class SnapshotObj:
             return False
 
         # item_obj가 빈 객체가 아닌지 확인
-        if new_item is None:
+        if item_obj is None:
             print("Invalid item object.")
             return False
         
         # 아이템 객체의 position, scale, rotation 값이 올바르게 들어갔는지 확인
         # 3차원 list 값이 아니라면 False 반환, 종료
-        if etc.check_3dim(item_obj.get_position()) is False:
+        if check_list_3dim(item_obj.get_position()) is False:
             print("Invalid position value")
             return False
-        if etc.check_3dim(item_obj.get_scale()) is False:
+        if check_list_3dim(item_obj.get_scale()) is False:
             print("Invalid scale value")
             return False
-        if etc.check_3dim(item_obj.get_rotation()) is False:
+        if check_list_3dim(item_obj.get_rotation()) is False:
             print("Invalid rotation value")
             return False
         
         # 스냅샷 객체에 item_obj 아이템 객체를 리스트에 추가
-        self.item_list.append(new_item.get_item())
+        self.item_list.append(item_obj.get_item())
 
 # SNAPSHOT 데이터베이스 구조
 """
@@ -222,7 +221,7 @@ class SnapshotObj:
             [
                 {
                     'category': 아이템 카테고리 이름
-                    'item_id': 아이템의 고유 id,
+                    'iid': 아이템의 고유 id,
                     'position': [x, y, z], <아이템 위치>
                     'rotation': [x, y, z], <아이템 각도>
                     'scale': [x, y, z], <아이템 사이즈>
@@ -278,8 +277,7 @@ def get_user_latest_made_snapshot(uid):
 
     uid(int) : 최근 스냅샷 데이터를 얻을 유저의 uid
     """
-    latest_snapshot = db.reference('SNAPSHOT').child(str(uid)).order_by_value().limit_to_last(1).get() or None
-    return latest_snapshot
+    return db.reference('SNAPSHOT').child(str(uid)).order_by_value().limit_to_last(1).get() or None
 
 # 스냅샷 아이템 리스트
 def get_snapshot_item(uid, timestamp):
@@ -296,7 +294,7 @@ def get_snapshot_item(uid, timestamp):
     else:
         return dir.get()
 
-def sync_profile_snapshot_preview(uid):
+def update_profile_snapshot_preview(uid):
     """
     프로필 화면에 보여줄 스냅샷 정보를 제일 최근 만든 스냅샷 정보로 교체하는 함수
 
@@ -305,11 +303,12 @@ def sync_profile_snapshot_preview(uid):
     dir = db.reference('PROFILE').child(str(uid)).child('snapshot_info')
     # 제일 최근 생성한 스냅샷이 없다면 종료
     if get_user_latest_made_snapshot(uid) is None:
+        dir.delete()
         return
     
     timestamp, snapshot_data = get_user_latest_made_snapshot(uid)
     # 현재 프로필의 최신 스냅샷 정보가 유지되고 있다면 종료 
-    if dir.child('timestamp').get == timestamp
+    if dir.child('timestamp').get() == timestamp:
         return
     
     # 프로필에 이전 스냅샷 정보가 있다면 최신 스냅샷으로 교체
@@ -347,7 +346,7 @@ def save_snapshot(uid, timestamp, room_snapshot):
     })
 
     # 유저의 프로필 내 최신 스냅샷 정보 동기화
-    sync_profile_snapshot_preview(uid)
+    update_profile_snapshot_preview(uid)
 
     return dir.child('timestamp').get()
 
@@ -366,7 +365,7 @@ def modify_snapshot_intro(uid, timestamp, modified_intro):
         dir.update({'snapshot_intro':modified_intro})
         
         # 유저의 프로필 내 최신 스냅샷 정보 동기화
-        sync_profile_snapshot_preview(uid)
+        update_profile_snapshot_preview(uid)
 
         print("Modify snapshot introduction success.")
         return True
@@ -467,10 +466,11 @@ def delete_snapshot(uid, timestamp):
     dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
     
     if dir.get() is not None:
+        # SNAPSHOT에서 해당 스냅샷 삭제
         dir.delete()
 
         # 유저의 프로필 내 최신 스냅샷 정보 동기화
-        sync_profile_snapshot_preview(uid)
+        update_profile_snapshot_preview(uid)
 
         print("Delete " + str(uid) + ", " + str(timestamp) + " snapshot success.")
         return True

@@ -7,14 +7,13 @@ from .follow import get_user_follower_num
 from .follow import update_profile_following_num
 from .follow import update_profile_follower_num
 from .follow import delete_user_all_follow_info
-from .snapshot import SnapshotObj
-from .snapshot import get_user_latest_made_snapshot
+from .snapshot import update_profile_snapshot_preview
 
 from pprint import pprint
 
 if not firebase_admin._apps:
     cred = credentials.Certificate("./key/key.json")
-    firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
+    firebase_admin.initialize_app(cred,{'databaseURL': 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
 
 # PROFILE 데이터베이스 구조
 """
@@ -41,6 +40,13 @@ if not firebase_admin._apps:
     }
 }
 """
+
+# 프로필 이미지 경로 : /home/capstone/back-end/data/img/profile
+# 프로필 배경이미지 경로 : /home/capstone/back-end/data/img/bg
+# 스냅샷 썸네일 이미지 경로 : /home/capstone/back-end/data/img/thumbnail
+
+default_profile_image = "capstone/back-end/data/img/profile/default_profile_image"
+default_bg_image = "capstone/back-end/data/img/bg/default_bg_image"
 
 def is_profile_exist(uid):
     """
@@ -78,17 +84,21 @@ def get_profile(uid):
 
     uid(int) : 해당 프로필 유저의 uid
     """
-    if is_profile_exist(str(uid)) is True:
-        dir = db.reference('PROFILE').child(str(uid))
-
-        # 팔로잉, 팔로워 수 동기화
-        if dir.child('num_following').get() != get_user_following_num(uid):
-            update_profile_following_num(uid)
-        if dir.child('num_follower').get() != get_user_follower_num(uid):
-            update_profile_follower_num(uid)
-        return dir.get()
-    else:
+    if is_profile_exist(str(uid)) is False:
         return None
+    
+    dir = db.reference('PROFILE').child(str(uid))
+
+    # 팔로잉, 팔로워 수 동기화
+    if dir.child('num_following').get() != get_user_following_num(uid):
+        update_profile_following_num(uid)
+    if dir.child('num_follower').get() != get_user_follower_num(uid):
+        update_profile_follower_num(uid)
+    
+    # 유저의 프로필 내 최신 스냅샷 정보 동기화
+    update_profile_snapshot_preview(uid)
+
+    return dir.get()
 
 def get_profile_nickname(uid):
     """
@@ -97,6 +107,26 @@ def get_profile_nickname(uid):
     uid(int) : 해당 프로필 유저의 uid
     """
     return db.reference('PROFILE').child(str(uid)).child('nickname').get()
+
+# 프로필 이미지 경로 요청
+def get_profile_image_path(uid):
+    """
+    서버 내 유저의 프로필 이미지가 저장된 경로를 알려주는 함수
+
+    uid(int) : 해당 프로필 유저의 uid
+    """
+    dir = db.reference('PROFILE').child(str(uid)).child('profile_image')
+    return dir.get()
+
+# 프로필 배경 이미지 경로 요청
+def get_profile_background_image_path(uid):
+    """
+    서버 내 유저의 프로필 배경 이미지가 저장된 경로를 알려주는 함수
+
+    uid(int) : 해당 프로필 유저의 uid
+    """
+    dir = db.reference('PROFILE').child(str(uid)).child('bg_image')
+    return dir.get()
 
 def search_profile_nickname(nickname):
     """
@@ -139,15 +169,15 @@ def make_profile(uid, login_id, nickname):
         # DB에 생성
         dir = db.reference('PROFILE').child(str(uid))
         dir.set({
-            'bg_image': None,
-            'introduction': 'Hello',
             'login_id': str(login_id),
             'login_id_upper': str(login_id).upper(),
             'nickname': str(nickname),
             'nickname_upper': str(nickname).upper(),
+            'introduction': 'Hello',
+            'profile_image': default_profile_image,
+            'bg_image': default_bg_image,
             'num_follower': 0,
             'num_following': 0,
-            'profile_image': None,
         })
         print("Setting " + login_id + " account's profile success.")
         return True
@@ -182,30 +212,27 @@ def modify_nickname(uid, new_name):
         print("Invalid UID value.")
         return False
 
-def modify_snapshot_preview(uid):
+# 프로필 이미지 경로 요청
+def modify_profile_image_path(uid, image_path):
     """
-    프로필 화면에 보여줄 스냅샷 정보를 제일 최근 만든 스냅샷 정보로 교체하는 함수
+    서버에 유저의 변경된 프로필 이미지 저장 후 이미지 파일 경로를 수정하는 함수
 
-    uid(str) : 해당 프로필 유저의 uid
+    uid(int) : 해당 프로필 유저의 uid
+    image_path(str) : 변경된 이미지가 저장된 서버 내 파일 경로
     """
-    dir = db.reference('PROFILE').child(str(uid)).child('snapshot_info')
-    # 제일 최근 생성한 스냅샷이 없다면 종료
-    if get_user_latest_made_snapshot(uid) is None:
-        return
-    
-    timestamp, snapshot_data = get_user_latest_made_snapshot(uid)
-    # 현재 프로필의 최신 스냅샷 정보가 유지되고 있다면 종료 
-    if dir.child('timestamp').get == timestamp
-        return
-    
-    # 프로필에 이전 스냅샷 정보가 있다면 최신 스냅샷으로 교체
-    dir.set({
-        'snapshot_intro': snapshot_data['snapshot_intro'],
-        'like_num': len(snapshot_data['like_uid'] or []),
-        'thumbnail': snapshot_data['thumbnail'],
-        'timestamp': timestamp,
-    })
-    return dir.child('timestamp').get()
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.update({'profile_image': image_path})
+
+# 프로필 배경 이미지 경로 요청
+def modify_profile_background_image_path(uid, image_path):
+    """
+    서버에 유저의 변경된 프로필 배경 이미지 저장 후 이미지 파일 경로를 수정하는 함수
+
+    uid(int) : 해당 프로필 유저의 uid
+    image_path(str) : 변경된 이미지가 저장된 서버 내 파일 경로
+    """
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.update({'bg_image': image_path})
 
 # 간단 소개글 변경
 def modify_introduction(uid, new_intro):
