@@ -9,19 +9,12 @@ from .follow import update_profile_follower_num
 from .follow import delete_user_all_follow_info
 from .snapshot import update_profile_snapshot_preview
 
-from pprint import pprint
-
-if not firebase_admin._apps:
-    cred = credentials.Certificate("./key/key.json")
-    firebase_admin.initialize_app(cred,{'databaseURL': 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
-
 # PROFILE 데이터베이스 구조
 """
 'PROFILE':
 {
     'uid':
     {
-        'bg_image': '백그라운드 이미지, image_path',
         'introduction': '간단 소개글',
         'login_id': 'USERINFO의 로그인 아이디',
         'login_id_upper': 'USERINFO의 로그인 아이디 색인용 대문자 버전',
@@ -29,24 +22,15 @@ if not firebase_admin._apps:
         'nickname_upper': '닉네임 색인용 대문자 버전',
         'num_follower': 팔로워 수,
         'num_following': 팔로잉 수,
-        'profile_image': '프로필 이미지, image_path',
         'snapshot_info':
         {
             'snapshot_intro': '스냅샷 코멘트',
             'like_num': 스냅샷 좋아요 수,
-            'thumbnail': '스냅샷 썸네일 이미지, image_path',
             'timestamp': '스냅샷 생성 시기',
         }
     }
 }
 """
-
-# 프로필 이미지 경로 : /home/capstone/back-end/data/img/profile
-# 프로필 배경이미지 경로 : /home/capstone/back-end/data/img/bg
-# 스냅샷 썸네일 이미지 경로 : /home/capstone/back-end/data/img/thumbnail
-
-default_profile_image = "capstone/back-end/data/img/profile/default_profile_image"
-default_bg_image = "capstone/back-end/data/img/bg/default_bg_image"
 
 def is_profile_exist(uid):
     """
@@ -108,26 +92,6 @@ def get_profile_nickname(uid):
     """
     return db.reference('PROFILE').child(str(uid)).child('nickname').get()
 
-# 프로필 이미지 경로 요청
-def get_profile_image_path(uid):
-    """
-    서버 내 유저의 프로필 이미지가 저장된 경로를 알려주는 함수
-
-    uid(int) : 해당 프로필 유저의 uid
-    """
-    dir = db.reference('PROFILE').child(str(uid)).child('profile_image')
-    return dir.get()
-
-# 프로필 배경 이미지 경로 요청
-def get_profile_background_image_path(uid):
-    """
-    서버 내 유저의 프로필 배경 이미지가 저장된 경로를 알려주는 함수
-
-    uid(int) : 해당 프로필 유저의 uid
-    """
-    dir = db.reference('PROFILE').child(str(uid)).child('bg_image')
-    return dir.get()
-
 def search_profile_nickname(nickname):
     """
     해당 문자열을 포함하는 닉네임을 가진 유저를 검색하는 함수
@@ -164,27 +128,24 @@ def make_profile(uid, login_id, nickname):
     uid(str) : 해당 프로필 유저의 uid
     login_id(str) : 해당 프로필 유저의 로그인 아이디
     """
-    # 현재 DB상에 같은 uid 값이 없으면 진행
-    if get_profile(str(uid)) is None:
-        # DB에 생성
-        dir = db.reference('PROFILE').child(str(uid))
-        dir.set({
-            'login_id': str(login_id),
-            'login_id_upper': str(login_id).upper(),
-            'nickname': str(nickname),
-            'nickname_upper': str(nickname).upper(),
-            'introduction': 'Hello',
-            'profile_image': default_profile_image,
-            'bg_image': default_bg_image,
-            'num_follower': 0,
-            'num_following': 0,
-        })
-        print("Setting " + login_id + " account's profile success.")
-        return True
     # 현재 DB상에 같은 uid 값이 있으면 중단
-    else:
+    if get_profile(str(uid)) is not None:
         print("Already exist same UID.")
         return False
+    
+    # 현재 DB상에 같은 uid 값이 없으면 진행
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.set({
+        'login_id': str(login_id),
+        'login_id_upper': str(login_id).upper(),
+        'nickname': str(nickname),
+        'nickname_upper': str(nickname).upper(),
+        'introduction': 'Hello',
+        'num_follower': 0,
+        'num_following': 0,
+    })
+    print("Setting " + login_id + " account's profile success.")
+    return True
 
 # 닉네임 변경
 def modify_nickname(uid, new_name):
@@ -196,43 +157,21 @@ def modify_nickname(uid, new_name):
     new_name(str) : 변경할 닉네임 정보
     """
     dir = db.reference('PROFILE').child(str(uid))
-    # 유효한 유저의 uid 값일 때 진행
-    if dir.get() is not None:
-        # 다른 유저들이 사용하지 않는 닉네임일 때 변경
-        if is_profile_nickname_exist(new_name) is False:
-            dir.update({
-                'nickname': new_name,
-                'nickname_upper': new_name.upper()
-                })
-            return True
-        else:
-            print("Already used nickname value.")
-            return False
-    else:
+    # 유효한 유저의 uid 값이 아니면 False 반환
+    if dir.get() is None:
         print("Invalid UID value.")
         return False
 
-# 프로필 이미지 경로 요청
-def modify_profile_image_path(uid, image_path):
-    """
-    서버에 유저의 변경된 프로필 이미지 저장 후 이미지 파일 경로를 수정하는 함수
+    # 이미 다른 유저가 사용 중인 닉네임이라면 False 반환
+    if is_profile_nickname_exist(new_name) is True:
+        print("Already used nickname value.")
+        return False
 
-    uid(int) : 해당 프로필 유저의 uid
-    image_path(str) : 변경된 이미지가 저장된 서버 내 파일 경로
-    """
-    dir = db.reference('PROFILE').child(str(uid))
-    dir.update({'profile_image': image_path})
-
-# 프로필 배경 이미지 경로 요청
-def modify_profile_background_image_path(uid, image_path):
-    """
-    서버에 유저의 변경된 프로필 배경 이미지 저장 후 이미지 파일 경로를 수정하는 함수
-
-    uid(int) : 해당 프로필 유저의 uid
-    image_path(str) : 변경된 이미지가 저장된 서버 내 파일 경로
-    """
-    dir = db.reference('PROFILE').child(str(uid))
-    dir.update({'bg_image': image_path})
+    dir.update({
+        'nickname': new_name,
+        'nickname_upper': new_name.upper()
+        })
+    return True
 
 # 간단 소개글 변경
 def modify_introduction(uid, new_intro):
@@ -244,13 +183,13 @@ def modify_introduction(uid, new_intro):
     new_intro(str) : 변경할 간단 소개글 정보
     """
     dir = db.reference('PROFILE').child(str(uid))
-    # 유효한 유저의 uid 값일 때 진행
-    if dir.get() is not None:
-        dir.update({'introduction':new_intro})
-        return True
-    else:
+    # 유효한 유저의 uid 값이 아니면 False 반환
+    if dir.get() is None:
         print("Invalid UID value.")
         return False
+
+    dir.update({'introduction':new_intro})
+    return True
 
 def delete_profile(uid):
     """
@@ -259,19 +198,18 @@ def delete_profile(uid):
 
     login_id(str) : 유저의 로그인 아이디
     """
-    # 현재 DB상에 해당 uid의 데이터가 있으면 진행
-    if get_profile(uid) is not None:
-        # 프로필 삭제 전 유저의 팔로우 정보 삭제
-        delete_user_all_follow_info(uid)
-
-        # DB에서 삭제
-        dir = db.reference('PROFILE').child(str(uid))
-        loginID = dir.child('login_id').get()
-        dir.delete()
-
-        print("Delete profile.(uid : " + str(uid) + ", login ID : " + str(loginID) + ")")
-        return True
-    # 현재 DB상에 해당 uid의 데이터가 없으면 중단  
-    else:
+    # 현재 DB상에 해당 uid의 데이터가 없으면 중단
+    if get_profile(uid) is None:
         print("There's no UID in PROFILE DB.")
         return False
+
+    # 프로필 삭제 전 유저의 팔로우 정보 삭제
+    delete_user_all_follow_info(uid)
+
+    # DB에서 삭제
+    dir = db.reference('PROFILE').child(str(uid))
+    loginID = dir.child('login_id').get()
+    dir.delete()
+
+    print("Delete profile.(uid : " + str(uid) + ", login ID : " + str(loginID) + ")")
+    return True

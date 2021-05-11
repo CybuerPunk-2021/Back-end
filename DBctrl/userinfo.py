@@ -2,19 +2,14 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
-from . import etc
+from .etc import make_uid
+from .etc import hash_password
 from .profile import get_profile_nickname
 from .profile import make_profile
 from .profile import is_profile_exist
 from .profile import is_profile_nickname_exist
 from .profile import delete_profile
 from .visitbook import delete_visitbook
-
-from pprint import pprint
-
-if not firebase_admin._apps:
-    cred = credentials.Certificate("./key/key.json")
-    firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
 
 # USERINFO 데이터베이스 구조
 """
@@ -100,7 +95,6 @@ def make_userinfo(login_id, login_pw, email, nickname):
 
         # 생성한 uid가 현재 사용하지 않는 uid값이 나올 때까지 반복
         while True:
-            print('hash')
             tmp_id = tmp_id + '0'
             uid = etc.make_uid(str(tmp_id))
 

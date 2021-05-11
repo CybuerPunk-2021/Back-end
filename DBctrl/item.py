@@ -4,12 +4,6 @@ from firebase_admin import db
 
 from .etc import check_list_3dim
 
-from pprint import pprint
-
-if not firebase_admin._apps:
-    cred = credentials.Certificate("./key/key.json")
-    firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
-
 # ITEM 데이터베이스 구조
 """
 'ITEM':
@@ -23,7 +17,6 @@ if not firebase_admin._apps:
                 'iid': '아이템 ID',
                 'item_name': '아이템 이름',
                 'scale': [x, y, z],
-                'data': '아이템 데이터'
             },
             ...
         ]
@@ -69,35 +62,33 @@ def get_item(category, iid):
     return False
 
 # 아이템 추가
-def add_item(category, item_name, data_path, size):
+def add_item(category, item_name, scale):
     """
     ITEM DB 내 아이템을 추가하는 함수
 
     category(str) : 아이템의 카테고리 이름
     item_name(str) : 아이템 이름
-    data_path(str) : 아이템의 모델링 데이터 파일 경로
-    size([int, int, int]) : 아이템 사이즈 3차원 배열
+    scale([int, int, int]) : 아이템 사이즈 3차원 배열
     """
     dir = db.reference('ITEM').child(str(category))
 
     # 아이템의 id 값을 결정하기 위한 번호 트랜잭션 작업
     try:
         new_item_num = dir.child('latest_id_num').transaction(increment_num)
-        print('Transaction completed')
+        print("Transaction completed.")
     except db.TransactionAbortedError:
-        print('Transaction failed to commit')
+        print("Transaction failed to commit.")
         return False
     
-    # size parameter는 3차원 리스트 타입이어야 함
-    if check_list_3dim(size) is False:
+    # scale parameter는 3차원 리스트 타입이어야 함
+    if check_list_3dim(scale) is False:
         return False
 
     # 추가할 아이템 data 선언
     data = {
         'iid': new_item_num,
         'item_name': item_name,
-        'data': data_path,
-        'size': size
+        'scale': scale
     }
 
     # 해당 카테고리를 신설하는 경우

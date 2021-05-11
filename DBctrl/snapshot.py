@@ -4,12 +4,6 @@ from firebase_admin import db
 
 from .etc import check_list_3dim
 
-from pprint import pprint
-
-if not firebase_admin._apps:
-    cred = credentials.Certificate("./key/key.json")
-    firebase_admin.initialize_app(cred,{'databaseURL': 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
-
 # 아이템 객체 class
 """
 ItemObj : 
@@ -171,7 +165,7 @@ class SnapshotObj:
         item_list = []
         for item in self.item_list:
             item_list.append(item)
-        
+
         return item_list
 
     def put_item(self, item_obj):
@@ -294,6 +288,32 @@ def get_snapshot_item(uid, timestamp):
     else:
         return dir.get()
 
+# DB에 저장된 스냅샷 소개글 얻는 함수
+def get_snapshot_intro(uid, timestamp):
+    """
+    DB에 저장된 해당 스냅샷의 간단 소개글 데이터를 얻는 함수
+
+    uid(int) : 스냅샷 데이터를 얻을 유저의 uid
+    timestamp(str) : 스냅샷 생성 타임스탬프
+    """
+    return db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp)).child('snapshot_intro').get()
+
+# 어떤 유저가 스냅샷을 좋아요 했는지 확인하는 함수
+def is_user_like_snapshot(cur_user_uid, snapshot_creator_uid, timestamp):
+    """
+    어떤 유저가 해당 프로필의 유저가 생성한 스냅샷에 좋아요 표시를 했는지 확인하는 함수
+
+    cur_user_uid(int) : 스냅샷에 좋아요 표시를 했는지 확인하고자 하는 유저의 uid
+    snapshot_creator_uid(int) : 해당 스냅샷을 생성한 유저의 uid
+    timestamp(str) : 스냅샷 생성 타임스탬프
+    """
+    like_uid_list = db.reference('SNAPSHOT').child(str(snapshot_creator_uid)).child(str(timestamp)).child('like_user').get()
+    # 만약 해당 스냅샷이 좋아요가 없다면 False 반환
+    if like_uid_list is None:
+        return False
+    # cur_user가 좋아요를 눌렀는지 True/False 반환
+    return cur_user_uid in like_uid_list
+
 def update_profile_snapshot_preview(uid):
     """
     프로필 화면에 보여줄 스냅샷 정보를 제일 최근 만든 스냅샷 정보로 교체하는 함수
@@ -307,7 +327,7 @@ def update_profile_snapshot_preview(uid):
         return
     
     timestamp, snapshot_data = get_user_latest_made_snapshot(uid)
-    # 현재 프로필의 최신 스냅샷 정보가 유지되고 있다면 종료 
+    # 현재 프로필의 최신 스냅샷 정보가 유지되고 있다면 종료
     if dir.child('timestamp').get() == timestamp:
         return
     
@@ -451,9 +471,9 @@ def get_snapshot_like_num(uid, timestamp):
     uid(int) : 해당 스냅샷을 만든 유저 uid
     timestamp(str) : 스냅샷의 타임스탬프 값
     """
-    user_list = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp)).child('like_user').get()
+    user_list = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp)).child('like_user').get() or []
     
-    return len(user_list) or 0
+    return len(user_list)
 
 # 스냅샷 삭제
 def delete_snapshot(uid, timestamp):

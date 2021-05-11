@@ -2,7 +2,6 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
-from pprint import pprint
 from hashlib import sha256
 import datetime
 
