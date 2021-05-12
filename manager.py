@@ -8,24 +8,20 @@ import os.path
 email_auth = {}
 
 def manage(data, sck, addr):
-    global socket
-    global ipAddr
-    socket = sck
-    ipAddr = addr
-    log.add_log(get_timestamp(), {'type': 'receive', 'content': data}, ipAddr)
-    #try:
-    act = data['action']
-    if act not in manage_list:
-        send({'action': 'wrong action format'})
-        return
-    manage_list[act](data)
-    #except Exception as e:
-    #    send({'action': 'wrong msg format'})
-    #    print(str(e))
+    socket = (sck, addr)
+    log.add_log(get_timestamp(), {'type': 'receive', 'content': data}, addr)
+    try:
+        act = data['action']
+        if act not in manage_list:
+            send({'action': 'wrong action format'}, socket)
+            return
+        manage_list[act](data, socket)
+    except Exception as e:
+        send({'action': 'wrong msg format'}, socket)
+        print(str(e))
     return
 
-def profile_img_request_size(data):
-    global socket
+def profile_img_request_size(data, socket):
     uid = data['uid']
     path = '../data/img/profile/' + str(data['uid'])
 
@@ -36,43 +32,40 @@ def profile_img_request_size(data):
     img = f.read()
     f.close()
     ret = {'action': 'profile_img_request_size', 'size': len(img), 'timestamp': profile.get_profile_image_time(data['uid'])}
-    send(ret)
+    send(ret, socket)
     try:
-        data = socket.recv(1024).decode()
+        data = socket[0].recv(1024).decode()
         data = data.replace("'", "\"")
         data = json.loads(data)
         if data['action'] == 'profile_img_request' and data['uid'] == uid:
-            socket.send(img)
+            socket[0].send(img)
             pass
         else:
-            send({'action': 'wrong uid'})
+            send({'action': 'wrong uid'}, socket)
     except:
         return
 
-def profile_img_update_size(data):
-    global socket
+def profile_img_update_size(data, socket):
     uid = data['uid']
     size = int(data['size'])
     t = get_timestamp()
     ret = {'action': 'profile_img_update_size', 'timestamp': t}
-    send(ret)
+    send(ret, socket)
     try:
         path = '../data/img/profile/' + str(data['uid'])
         f = open(path, 'wb')
         
-        for _ in range(int(size / 4096) + 1):
-            d = socket.recv(4096)
-            f.write(d)
+        d = socket[0].recv(size)
+        f.write(d)
         f.close()
         ret = {'action': 'profile_img_update', 'type': 'True'}
         profile.modify_profile_image_time(data['uid'], t)
     except Exception as e:
         print(e)
         ret = {'action': 'profile_img_update', 'type': 'False'}
-    send(ret)
+    send(ret, socket)
 
-def signup(data):
-    global socket
+def signup(data, socket):
     res = userinfo.check_id_nickname_dup(data['id'], data['nickname'])
 
     for ea in email_auth.keys():
@@ -87,10 +80,10 @@ def signup(data):
     elif res == True:
         email_auth[(data['id'], data['nickname'])] = sendEmail(data)
         ret = {'action': 'email send'}
-    send(ret)
+    send(ret, socket)
     try:
         while True:
-            auth = socket.recv(1024)
+            auth = socket[0].recv(1024)
             auth = auth.decode()
             auth = auth.replace("'", "\"")
             auth = json.loads(auth)
@@ -100,18 +93,18 @@ def signup(data):
                     profile.make_profile(uid, data['id'], data['nickname'], get_timestamp())
                     newsfeed.make_newsfeed(uid, data['nickname'])
                     ret = {'action': 'email auth', 'auth': 'True'}
-                    send(ret)
+                    send(ret, socket)
                     del(email_auth[(data['id']), data['nickname']])
                     break
                 else:
                     ret = {'action': 'email auth', 'auth': 'False'}
-                    send(ret)
+                    send(ret, socket)
             else:
-                send({'action': 'wrong action'})
+                send({'action': 'wrong action'}, socket)
                 del(email_auth[(data['id']), data['nickname']])
                 break
     except Exception as e:
-        send({'action': 'wrong format'})
+        send({'action': 'wrong format'}, socket)
         print(e)
         del(email_auth[(data['id']), data['nickname']])
         return
@@ -121,7 +114,7 @@ def sendEmail(data):
     send_mail(data['email'], str(auth))
     return auth
 
-def login(data):
+def login(data, socket):
     id = data['id']
     pw = data['pw']
     res = userinfo.login(id, pw)
@@ -129,9 +122,9 @@ def login(data):
         ret = {'action': 'False'}
     else:
         ret = {'action':'True', 'nickname': res[0], 'uid': int(res[1])}
-    send(ret)
+    send(ret, socket)
 
-def get_home(data):
+def get_home(data, socket):
     res = newsfeed.get_newsfeed_uid(data['uid'])
     if res:
         res = res[data['count'] * 2: (data['count'] + 1) * 2]
@@ -141,19 +134,19 @@ def get_home(data):
         ret = {'action': 'homeinfo', 'info': res}
     else:
         ret = {'action': 'homeinfo', 'info': []}
-    send(ret)
+    send(ret, socket)
     return
 
-def profile_info(data):
+def profile_info(data, socket):
     res = profile.get_profile(data['uid'])
     if res == None:
-        send({'action': 'None'})
+        send({'action': 'None'}, socket)
     else:
         ret = {'action': 'profile_info', 'follower': res['num_follower'], 'self_intro': res['introduction']}
         ret['snapshot_info'] = res['snapshot_info']        
-    send(ret)
+    send(ret, socket)
 
-def get_follower(data):
+def get_follower(data, socket):
     res = follow.get_user_follower_uid_list(data['uid'])
     result = []
     for r in res:
@@ -165,9 +158,9 @@ def get_follower(data):
         ret = {'action': 'follower', 'follower': result}
     else:
         ret = {'action': 'follower err'}
-    send(ret)
+    send(ret, socket)
 
-def get_following(data):
+def get_following(data, socket):
     res = follow.get_user_following_uid_list(data['uid'])
     result = []
     for r in res:
@@ -179,42 +172,41 @@ def get_following(data):
         ret = {'action': 'following', 'following': result}
     else:
         ret = {'action': 'following err'}
-    send(ret)
+    send(ret, socket)
 
-def add_follow(data):
+def add_follow(data, socket):
     if follow.follow_user(data['from_uid'], data['to_uid'], get_timestamp()):
         ret = {'action': 'OK'}
     else:
         ret = {'action': 'ALREADY'}
-    send(ret)
+    send(ret, socket)
     
-def del_follow(data):
+def del_follow(data, socket):
     if follow.unfollow_user(data['from_uid'], data['to_uid']):
         ret = {'action': 'OK'}
     else:
         ret = {'action': 'ALREADY'}
-    send(ret)
+    send(ret, socket)
 
-def mod_nick(data):
+def mod_nick(data, socket):
     if profile.modify_nickname(data['uid'], data['nickname']):
         newsfeed.mod_nick(data['uid'], data['nickname'])
         ret = {'action': 'nickname_ok'}
     else:
         ret = {'action': 'dup nick'}
-    send(ret)
+    send(ret, socket)
 
-def mod_email(data):
-    global socket
+def mod_email(data, socket):
     try:
         email_auth[data['uid']] = sendEmail(data)
         ret = {'action': 'email_send'}
     except:
         ret = {'action': 'err'}
-    send(ret)
+    send(ret, socket)
 
     try:
         while True:
-            auth = socket.recv(1024)
+            auth = socket[0].recv(1024)
             auth = auth.decode()
             auth = auth.replace("'", "\"")
             auth = json.loads(auth)
@@ -222,51 +214,51 @@ def mod_email(data):
                 if email_auth[data['uid']] == auth['auth']:
                     userinfo.modify_email(userinfo.get_userinfo_using_uid(data['uid']), data['email'])
                     ret = {'action': 'email auth', 'auth': 'True'}
-                    send(ret)
+                    send(ret, socket)
                     del(email_auth[data['uid']])
                     break
                 else:
                     ret = {'action': 'email auth', 'auth': 'False'}
-                    send(ret)
+                    send(ret, socket)
             else:
-                send({'action': 'wrong action'})
+                send({'action': 'wrong action'}, socket)
                 del(email_auth[data['uid']])
                 break
     except:
-        send({'action': 'wrong format'})
+        send({'action': 'wrong format'}, socket)
         del(email_auth[data['uid']])
     
 
 
-def mod_pw(data):
+def mod_pw(data, socket):
     if userinfo.modify_password_using_uid(data['uid'], data['pw'], data['new_pw']):
         ret = {'action': 'pw_ok'}
     else:
         ret = {'action': 'err'}
-    send(ret)
+    send(ret, socket)
 
-def mod_intro(data):
+def mod_intro(data, socket):
     if profile.modify_introduction(data['uid'], data['introduce']):
         ret = {'action': 'introduce_ok'}
     else:
         ret = {'action': 'err'}
-    send(ret)
+    send(ret, socket)
 
-def mod_snapdesc(data):
+def mod_snapdesc(data, socket):
     if snapshot.modify_snapshot_intro(data['uid'], data['timestamp'], data['introduce']):
         ret = {'action': 'description_ok'}
     else:
         ret = {'action': 'err'}
-    send(ret)
+    send(ret, socket)
 
-def del_snapshot(data):
+def del_snapshot(data, socket):
     if snapshot.delete_snapshot(data['uid'], data['timestamp']):
         ret = {'action': 'ok'}
     else:
         ret = {'action': 'err'}
-    send(ret)
+    send(ret, socket)
 
-def like_snapshot(data):
+def like_snapshot(data, socket):
     if data['type'] == 'add':
         if snapshot.like_snapshot(data['to_uid'], data['from_uid'], data['timestamp']):
             ret = {'action': 'ok'}
@@ -279,32 +271,32 @@ def like_snapshot(data):
             ret = {'action': 'err'}
     else:
         ret = {'action': 'like snapshot err'}
-    send(ret)
+    send(ret, socket)
 
-def get_snapshot_item_list(data):
+def get_snapshot_item_list(data, socket):
     res = snapshot.get_snapshot_item(data['uid'], data['timestamp'])
     if res:
         ret = {'action': 'snapshot_roominfo', 'item_list': res}
     else:
         ret = {'action': 'err'}
-    send(ret)
+    send(ret, socket)
 
-def save_snapshot(data):
+def save_snapshot(data, socket):
     snap = snapshot.SnapshotObj(data['snapshot_intro'], None, [])
     for item in data['item_list']:
         _item = snapshot.ItemObj('desk', item['iid'], item['position'], item['scale'], item['rotation'])
         snap.put_item(_item)
     res = snapshot.save_snapshot(data['uid'], get_timestamp(), snap)
-    print(res)
+    print(res, socket)
 
     if not res:
         ret = {'action': 'err'}
     else:
         newsfeed.add_snap(data['uid'], res)
         ret = {'action': 'ok', 'timestamp': res}
-    send(ret)
+    send(ret, socket)
 
-def visit_book_request(data):
+def visit_book_request(data, socket):
     if data['type'] == 'comment':
         res = visitbook.get_comment_list(data['uid'])
     elif data['type'] == 'reply':
@@ -314,9 +306,9 @@ def visit_book_request(data):
         r['nickname'] = profile.get_profile_nickname(r['writer_uid'])
     ret = {'action': 'visit_book_request'}
     ret['visit_book'] = res
-    send(ret)
+    send(ret, socket)
 
-def visit_book_write(data):
+def visit_book_write(data, socket):
     if data['type'] == 'comment':
         res = visitbook.add_comment(data['uid'], data['writer_uid'], data['comment'], get_timestamp())
         if res:
@@ -331,17 +323,15 @@ def visit_book_write(data):
             ret = {'action': 'err'}
     else:
         ret = {'action': 'err'}
-    send(ret)
+    send(ret, socket)
     
 
-def send(msg):
-    global socket
-    global ipAddr
-    log.add_log(get_timestamp(), {'type': 'send', 'content': msg}, ipAddr)
+def send(msg, socket):
+    log.add_log(get_timestamp(), {'type': 'send', 'content': msg}, socket[1])
     msg = str(msg)
     msg = msg.replace("\'", "\"")
     print(msg)
-    socket.send(msg.encode())
+    socket[0].send(msg.encode())
 
 def get_timestamp():
     t = str(datetime.now())
