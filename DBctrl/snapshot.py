@@ -337,12 +337,16 @@ def update_profile_snapshot_preview(uid):
     # 현재 프로필의 최신 스냅샷 정보가 유지되고 있다면 종료
     if dir.child('timestamp').get() == timestamp:
         return
+
+    if 'like_uid' in snapshot_data:
+        like_num = len(snapshot_data['like_uid'])
+    else:
+        like_num = 0
     
     # 프로필에 이전 스냅샷 정보가 있다면 최신 스냅샷으로 교체
     dir.set({
         'snapshot_intro': snapshot_data['snapshot_intro'],
-        'like_num': len(snapshot_data['like_uid'] or []),
-        'thumbnail': snapshot_data['thumbnail'],
+        'like_num': like_num,
         'timestamp': timestamp,
     })
     return dir.child('timestamp').get()

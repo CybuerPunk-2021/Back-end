@@ -9,15 +9,15 @@ email_auth = {}
 def manage(data, sck):
     global socket
     socket = sck
-    try:
-        act = data['action']
-        if act not in manage_list:
-            send("{'action': 'wrong action format'}")
-            return
-        manage_list[act](data)
-    except Exception as e:
-        send("{'action': 'wrong msg format'}")
-        print(str(e))
+    #try:
+    act = data['action']
+    if act not in manage_list:
+        send("{'action': 'wrong action format'}")
+        return
+    manage_list[act](data)
+    #except Exception as e:
+    #    send("{'action': 'wrong msg format'}")
+    #    print(str(e))
     return
 
 def profile_img_request_size(data):
@@ -266,16 +266,14 @@ def save_snapshot(data):
     for item in data['item_list']:
         _item = snapshot.ItemObj('desk', item['iid'], item['position'], item['scale'], item['rotation'])
         snap.put_item(_item)
-    t = get_timestamp()
-    res = snapshot.save_snapshot(data['uid'], t, snap)
+    res = snapshot.save_snapshot(data['uid'], get_timestamp(), snap)
     print(res)
 
-    if not t:
+    if not res:
         ret = {'action': 'err'}
     else:
-        print(t)
-        newsfeed.add_snap(data['uid'], t)
-        ret = {'action': 'ok', 'timestamp': t}
+        newsfeed.add_snap(data['uid'], res)
+        ret = {'action': 'ok', 'timestamp': res}
     send(ret)
 
 def visit_book_request(data):
