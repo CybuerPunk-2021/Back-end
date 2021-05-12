@@ -20,7 +20,7 @@ class c_sck(Thread): # client socket thread object
         self.lst = lst # client socket list
 
     def run(self): # when thread is started
-        self.c_socket,_ = self.s_sck.accept() # accept
+        self.c_socket, addr = self.s_sck.accept() # accept
         print('aceepted')
         create_thread(self.s_sck) # create new thread to accept client
         tmp_thread = Thread(target = self.c_recv) # thread for receive msg

@@ -127,11 +127,14 @@ def login(data):
 
 def get_home(data):
     res = newsfeed.get_newsfeed_uid(data['uid'])
-    res = res[data['count'] * 2: (data['count'] + 1) * 2]
-    for snap in res:
-        snap['snapshot_intro'] = snapshot.get_snapshot_intro(snap['uid'], snap['timestamp'])
-        snap['like'] = str(snapshot.is_user_like_snapshot(data['uid'], snap['uid'], snap['timestamp']))
-    ret = {'action': 'homeinfo', 'info': res}
+    if res:
+        res = res[data['count'] * 2: (data['count'] + 1) * 2]
+        for snap in res:
+            snap['snapshot_intro'] = snapshot.get_snapshot_intro(snap['uid'], snap['timestamp'])
+            snap['like'] = str(snapshot.is_user_like_snapshot(data['uid'], snap['uid'], snap['timestamp']))
+        ret = {'action': 'homeinfo', 'info': res}
+    else:
+        ret = {'action': 'homeinfo', 'info': []}
     send(ret)
     return
 
