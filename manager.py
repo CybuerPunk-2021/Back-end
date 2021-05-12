@@ -38,11 +38,12 @@ def profile_img_request_size(data, socket):
         data = data.replace("'", "\"")
         data = json.loads(data)
         if data['action'] == 'profile_img_request' and data['uid'] == uid:
-            socket[0].send(img)
-            pass
+            socket[0].sendall(img)
         else:
             send({'action': 'wrong uid'}, socket)
-    except:
+    except Exception as e:
+        send({'action': 'wrong msg format'}, socket)
+        print(e)
         return
 
 def profile_img_update_size(data, socket):
@@ -287,7 +288,7 @@ def save_snapshot(data, socket):
         _item = snapshot.ItemObj('desk', item['iid'], item['position'], item['scale'], item['rotation'])
         snap.put_item(_item)
     res = snapshot.save_snapshot(data['uid'], get_timestamp(), snap)
-    print(res, socket)
+    #print(res)
 
     if not res:
         ret = {'action': 'err'}
