@@ -20,6 +20,8 @@ from .snapshot import update_profile_snapshot_preview
         'nickname_upper': '닉네임 색인용 대문자 버전',
         'num_follower': 팔로워 수,
         'num_following': 팔로잉 수,
+        'profile_image_time': '가장 최근에 프로필 이미지를 변경한 시각',
+        'bg_image_time': '가장 최근에 배경 이미지를 변경한 시각',
         'snapshot_info':
         {
             'snapshot_intro': '스냅샷 코멘트',
@@ -90,6 +92,24 @@ def get_profile_nickname(uid):
     """
     return db.reference('PROFILE').child(str(uid)).child('nickname').get()
 
+# 프로필 이미지 최근 수정 시각 요청
+def get_profile_image_time(uid):
+    """
+    제일 최근 유저의 프로필 이미지를 변경한 시각을 얻는 함수
+    uid(int) : 해당 프로필 유저의 uid
+    """
+    dir = db.reference('PROFILE').child(str(uid)).child('profile_image_time')
+    return dir.get()
+
+# 프로필 배경 이미지 최근 수정 시각 요청
+def get_profile_background_image_time(uid):
+    """
+    제일 최근 유저의 프로필 배경 이미지를 변경한 시각을 얻는 함수
+    uid(int) : 해당 프로필 유저의 uid
+    """
+    dir = db.reference('PROFILE').child(str(uid)).child('bg_image_time')
+    return dir.get()
+
 def search_profile_nickname(nickname):
     """
     해당 문자열을 포함하는 닉네임을 가진 유저를 검색하는 함수
@@ -118,7 +138,7 @@ def search_profile(input_string):
     """
     return [search_profile_nickname(input_string), search_profile_login_id(input_string)]
 
-def make_profile(uid, login_id, nickname):
+def make_profile(uid, login_id, nickname, timestap):
     """
     해당 uid 값으로 초기 프로필 데이터를 세팅하는 함수
     생성에 성공하면 True, 실패하면 False 반환
@@ -141,6 +161,8 @@ def make_profile(uid, login_id, nickname):
         'introduction': 'Hello',
         'num_follower': 0,
         'num_following': 0,
+        'profile_image_time': timestamp,
+        'bg_image_time': timestamp,
     })
     print("Setting " + login_id + " account's profile success.")
     return True
@@ -188,6 +210,28 @@ def modify_introduction(uid, new_intro):
 
     dir.update({'introduction':new_intro})
     return True
+
+# 프로필 이미지 최근 수정 시각 변경
+def modify_profile_image_time(uid, timestamp):
+    """
+    제일 최근 프로필 이미지를 수정한 시각을 변경하는 함수
+    
+    uid(int) : 해당 프로필 유저의 uid
+    timestamp(str) : 프로필 이미지를 변경한 시각
+    """
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.update({'profile_image_time': timestamp})
+
+# 프로필 배경 이미지 최근 수정 시각 변경
+def modify_profile_background_image_time(uid, timestamp):
+    """
+    서버에 유저의 변경된 프로필 배경 이미지 저장 후 이미지 파일 경로를 수정하는 함수
+
+    uid(int) : 해당 프로필 유저의 uid
+    timestamp(str) : 프로필 배경 이미지를 변경한 시각
+    """
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.update({'bg_image_time': timestamp})
 
 def delete_profile(uid):
     """
