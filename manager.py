@@ -61,12 +61,13 @@ def profile_img_update_size(data):
         f = open(path, 'wb')
         
         for _ in range(int(size / 4096) + 1):
-            data = socket.recv(4096)
-            f.write(data)
+            d = socket.recv(4096)
+            f.write(d)
         f.close()
         ret = {'action': 'profile_img_update', 'type': 'True'}
         profile.modify_profile_image_time(data['uid'], t)
-    except:
+    except Exception as e:
+        print(e)
         ret = {'action': 'profile_img_update', 'type': 'False'}
     send(ret)
 
@@ -247,7 +248,7 @@ def mod_snapdesc(data):
     send(ret)
 
 def del_snapshot(data):
-    if snapshot.delete_snapshot(data['uid'], datap['timestamp']):
+    if snapshot.delete_snapshot(data['uid'], data['timestamp']):
         ret = {'action': 'ok'}
     else:
         ret = {'action': 'err'}
