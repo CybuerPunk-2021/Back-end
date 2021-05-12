@@ -284,18 +284,19 @@ def visit_book_request(data):
     elif data['type'] == 'reply':
         res = visitbook.get_comment_reply_list(data['uid'], data['cid'])
     res = res[int(data['count']) * 5:(int(data['count']) + 1) * 5 ]
-    ret = {'action': visit_book_request}
+    ret = {'action': 'visit_book_request'}
     ret['visit_book'] = res
+    send(ret)
 
 def visit_book_write(data):
     if data['type'] == 'comment':
-        res = add_comment(data['uid'], data['writer_uid'], data['comment'], get_timestamp())
+        res = visitbook.add_comment(data['uid'], data['writer_uid'], data['comment'], get_timestamp())
         if res:
             ret = {'action': 'visitbook_write', 'timestamp': res}
         else:
             ret = {'action': 'err'}
     elif data['type'] == 'reply':
-        res = add_comment_reply(data['uid'], data['cid'], data['writer_uid'], data['comment'], get_timestamp())
+        res = visitbook.add_comment_reply(data['uid'], data['cid'], data['writer_uid'], data['comment'], get_timestamp())
         if res:
             ret = {'action': 'visitbook_write', 'timestamp': res}
         else:

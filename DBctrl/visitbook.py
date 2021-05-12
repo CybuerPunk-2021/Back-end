@@ -1,7 +1,6 @@
 from firebase_admin import db
 
 from .profile import is_profile_exist
-from .etc import timestamp
 
 # VISITBOOK 데이터베이스 구조
 """

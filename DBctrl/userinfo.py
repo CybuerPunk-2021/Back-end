@@ -184,7 +184,7 @@ def modify_password_using_uid(uid, check_pw, new_pw):
         # 기존의 비밀번호가 맞는지 확인 후 변경
         if exist_pw == hash_password(check_pw):
             dir = db.reference('USERINFO').child(str(user_data[0]))
-            dir.update({'login_pw':hash_password(new_pw)})
+            dir.update({'login_pw': hash_password(new_pw)})
             print("Password is changed successfully.")
             return True
         # 비밀번호가 일치하지 않으면 False 반환
