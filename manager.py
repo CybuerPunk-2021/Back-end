@@ -13,15 +13,15 @@ def manage(data, sck, addr):
     socket = sck
     ipAddr = addr
     log.add_log(get_timestamp(), {'type': 'receive', 'content': data}, ipAddr)
-    try:
-        act = data['action']
-        if act not in manage_list:
-            send({'action': 'wrong action format'})
-            return
-        manage_list[act](data)
-    except Exception as e:
-        send({'action': 'wrong msg format'})
-        print(str(e))
+    #try:
+    act = data['action']
+    if act not in manage_list:
+        send({'action': 'wrong action format'})
+        return
+    manage_list[act](data)
+    #except Exception as e:
+    #    send({'action': 'wrong msg format'})
+    #    print(str(e))
     return
 
 def profile_img_request_size(data):
@@ -155,22 +155,28 @@ def profile_info(data):
 
 def get_follower(data):
     res = follow.get_user_follower_uid_list(data['uid'])
+    result = []
     for r in res:
-        r['nickname'] = profile.get_profile_nickname(r['uid'])
+        tmp = {'uid': r}
+        tmp['nickname'] = profile.get_profile_nickname(r)
+        result.append(tmp)
 
     if res:
-        ret = {'action': 'follower', 'follower': res}
+        ret = {'action': 'follower', 'follower': result}
     else:
         ret = {'action': 'follower err'}
     send(ret)
 
 def get_following(data):
     res = follow.get_user_following_uid_list(data['uid'])
+    result = []
     for r in res:
-        r['nickname'] = profile.get_profile_nickname(r['uid'])
-        
+        tmp = {'uid': r}
+        tmp['nickname'] = profile.get_profile_nickname(r)
+        result.append(tmp)
+
     if res:
-        ret = {'action': 'following', 'following': res}
+        ret = {'action': 'following', 'following': result}
     else:
         ret = {'action': 'following err'}
     send(ret)
