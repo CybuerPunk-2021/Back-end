@@ -16,11 +16,11 @@ def manage(data, sck, addr):
     try:
         act = data['action']
         if act not in manage_list:
-            send("{'action': 'wrong action format'}")
+            send({'action': 'wrong action format'})
             return
         manage_list[act](data)
     except Exception as e:
-        send("{'action': 'wrong msg format'}")
+        send({'action': 'wrong msg format'})
         print(str(e))
     return
 
@@ -45,7 +45,7 @@ def profile_img_request_size(data):
             socket.send(img)
             pass
         else:
-            send("{'action': 'wrong uid'}")
+            send({'action': 'wrong uid'})
     except:
         return
 
@@ -104,11 +104,11 @@ def signup(data):
                     ret = {'action': 'email auth', 'auth': 'False'}
                     send(ret)
             else:
-                send('wrong action')
+                send({'action': 'wrong action'})
                 del(email_auth[(data['id']), data['nickname']])
                 break
     except Exception as e:
-        send('wrong format')
+        send({'action': 'wrong format'})
         print(e)
         del(email_auth[(data['id']), data['nickname']])
         return
@@ -144,7 +144,7 @@ def get_home(data):
 def profile_info(data):
     res = profile.get_profile(data['uid'])
     if res == None:
-        send('None')
+        send({'action': 'None'})
     else:
         ret = {'action': 'profile_info', 'follower': res['num_follower'], 'self_intro': res['introduction']}
         ret['snapshot_info'] = res['snapshot_info']        
@@ -214,11 +214,11 @@ def mod_email(data):
                     ret = {'action': 'email auth', 'auth': 'False'}
                     send(ret)
             else:
-                send('wrong action')
+                send({'action': 'wrong action'})
                 del(email_auth[data['uid']])
                 break
     except:
-        send('wrong format')
+        send({'action': 'wrong format'})
         del(email_auth[data['uid']])
     
 
