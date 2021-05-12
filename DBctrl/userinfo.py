@@ -111,7 +111,7 @@ def make_userinfo(login_id, login_pw, email, nickname):
         })
 
         print("Produce " + login_id + " account success.")
-        return True
+        return uid
     # 현재 DB상에 해당 아이디의 사용자가 있으면 중단  
     else:
         print("Already exist ID value.")
