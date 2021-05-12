@@ -3,28 +3,32 @@ from DBctrl import *
 from random import randint
 from sendEmail import send_mail
 import json
+import os.path
 
 email_auth = {}
 
 def manage(data, sck):
     global socket
     socket = sck
-    #try:
-    act = data['action']
-    if act not in manage_list:
-        send("{'action': 'wrong action format'}")
-        return
-    manage_list[act](data)
-    #except Exception as e:
-    #    send("{'action': 'wrong msg format'}")
-    #    print(str(e))
+    try:
+        act = data['action']
+        if act not in manage_list:
+            send("{'action': 'wrong action format'}")
+            return
+        manage_list[act](data)
+    except Exception as e:
+        send("{'action': 'wrong msg format'}")
+        print(str(e))
     return
 
 def profile_img_request_size(data):
     global socket
     uid = data['uid']
-    # get profile img info (from db, from server)
-    # path = ?
+    path = '../data/img/profile/' + str(data['uid'])
+
+    if not os.path.isfile(path):
+        path = '../data/img/profile/default.png'
+
     f = open(path, 'rb')
     img = f.read()
     f.close()
@@ -45,16 +49,18 @@ def profile_img_request_size(data):
 def profile_img_update_size(data):
     global socket
     uid = data['uid']
-    size = data['size']
+    size = int(data['size'])
     ret = {'action': 'profile_img_update_size', 'timestamp': get_timestamp()}
     send(ret)
     try:
-        f = open('path', 'wb') # path = img path(also save to db)
+        path = '../data/img/profile/' + str(data['uid'])
+        f = open(path, 'wb')
+        print(str(size))
+        print(int(size/4096) + 1)
         for _ in range(int(size / 4096) + 1):
             data = socket.recv(4096)
             f.write(data)
         f.close()
-        # update db (img path)
         ret = {'action': 'profile_img_update', 'type': True}
     except:
         ret = {'action': 'profile_img_update', 'type': False}
