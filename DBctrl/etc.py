@@ -25,7 +25,7 @@ def hash_password(password):
     
 def timestamp():
     now = datetime.datetime.now()
-    return now.strftime('%Y-%m-%d %H:%M:%S.%f')
+    return now.strftime('%Y-%m-%d %H:%M:%S')
 
 def check_list_3dim(list_param):
     # 입력 parameter가 리스트 타입이어야 함
