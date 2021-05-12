@@ -35,7 +35,7 @@ def profile_img_request_size(data):
     f = open(path, 'rb')
     img = f.read()
     f.close()
-    ret = {'action': 'profile_img_request_size', 'size': len(img), 'timestamp': get_timestamp()}
+    ret = {'action': 'profile_img_request_size', 'size': len(img), 'timestamp': profile.get_profile_image_time(data['uid'])}
     send(ret)
     try:
         data = socket.recv(1024).decode()
@@ -53,7 +53,8 @@ def profile_img_update_size(data):
     global socket
     uid = data['uid']
     size = int(data['size'])
-    ret = {'action': 'profile_img_update_size', 'timestamp': get_timestamp()}
+    t = get_timestamp()
+    ret = {'action': 'profile_img_update_size', 'timestamp': t}
     send(ret)
     try:
         path = '../data/img/profile/' + str(data['uid'])
@@ -64,6 +65,7 @@ def profile_img_update_size(data):
             f.write(data)
         f.close()
         ret = {'action': 'profile_img_update', 'type': 'True'}
+        profile.modify_profile_image_time(data['uid'], t)
     except:
         ret = {'action': 'profile_img_update', 'type': 'False'}
     send(ret)
@@ -295,6 +297,8 @@ def visit_book_request(data):
     elif data['type'] == 'reply':
         res = visitbook.get_comment_reply_list(data['uid'], data['cid'])
     res = res[int(data['count']) * 5:(int(data['count']) + 1) * 5 ]
+    for r in res:
+        r['nickname'] = profile.get_profile_nickname(r['writer_uid'])
     ret = {'action': 'visit_book_request'}
     ret['visit_book'] = res
     send(ret)
