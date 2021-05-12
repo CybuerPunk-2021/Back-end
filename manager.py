@@ -122,7 +122,7 @@ def login(data):
     if res == False:
         ret = {'action': False}
     else:
-        ret = {'action': True, 'nickname': res[0], 'uid': res[1]}
+        ret = {'action': True, 'nickname': res[0], 'uid': int(res[1])}
     send(ret)
 
 def get_home(data):
