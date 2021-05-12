@@ -102,7 +102,7 @@ def get_profile_image_time(uid):
     return dir.get()
 
 # 프로필 배경 이미지 최근 수정 시각 요청
-def get_profile_background_image_time(uid):
+def get_profile_image_time(uid):
     """
     제일 최근 유저의 프로필 배경 이미지를 변경한 시각을 얻는 함수
     uid(int) : 해당 프로필 유저의 uid
@@ -187,10 +187,18 @@ def modify_nickname(uid, new_name):
         print("Already used nickname value.")
         return False
 
+    # PROFILE document에 nickname 값 변경
     dir.update({
         'nickname': new_name,
         'nickname_upper': new_name.upper()
         })
+    
+    # NEWSFEED document에 nickname 값 변경
+    dir = db.reference('NEWSFEED').child(str(uid))
+    dir.update({
+        'nickname': new_name,
+        })
+
     return True
 
 # 간단 소개글 변경

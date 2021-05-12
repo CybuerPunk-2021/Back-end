@@ -1,9 +1,6 @@
-import firebase_admin
-from firebase_admin import credentials
 from firebase_admin import db
 
 from .follow import get_user_following_uid_list
-
 
 # NEWSFEED 데이터베이스 구조
 """
@@ -12,8 +9,9 @@ from .follow import get_user_following_uid_list
     'uid':
     {
         'nickname': '닉네임',
-        'snapshot': [timestamp1, timestamp2]
-    }
+        'snapshot': [timestamp1, timestamp2, ...]
+    },
+    ...
 }
 """
 
