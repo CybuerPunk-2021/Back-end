@@ -120,6 +120,13 @@ def login(data):
     send(ret)
 
 def get_home(data):
+    res = newsfeed.get_newsfeed_uid(data['uid'])
+    res = res[data['count'] * 2: (data['count'] + 1) * 2]
+    for snap in res:
+        snap['snapshot_intro'] = snapshot.get_snapshot_intro(snap['uid'], snap['timestamp'])
+        snap['like'] = snapshot.is_user_like_snapshot(data['uid'], snap['uid'], snap['timestamp'])
+    ret = {'action': 'homeinfo', 'info': res}
+    send(ret)
     return
 
 def profile_info(data):
@@ -131,7 +138,7 @@ def profile_info(data):
     send(ret)
 
 def get_follower(data):
-    res = follow.get_user_follower_list(data['uid'], data['uid'])
+    res = follow.get_user_follower_uid_list(data['uid'])
     if res:
         ret = {'action': 'follower', 'follower': res}
     else:
@@ -139,7 +146,7 @@ def get_follower(data):
     send(ret)
 
 def get_following(data):
-    res = follow.get_user_following_lis(data['uid'], data['uid'])
+    res = follow.get_user_following_uid_list(data['uid'])
     if res:
         ret = {'action': 'following', 'following': res}
     else:
@@ -147,7 +154,7 @@ def get_following(data):
     send(ret)
 
 def add_follow(data):
-    if follow.follow_user(data['from_uid'], data['to_uid']):
+    if follow.follow_user(data['from_uid'], data['to_uid'], get_timestamp()):
         ret = {'action': 'OK'}
     else:
         ret = {'action': 'ALREADY'}
@@ -259,12 +266,16 @@ def save_snapshot(data):
     for item in data['item_list']:
         _item = snapshot.ItemObj('desk', item['iid'], item['position'], item['scale'], item['rotation'])
         snap.put_item(_item)
-    res = snapshot.save_snapshot(data['uid'], get_timestamp(), snap)
-    if not res:
+    t = get_timestamp()
+    res = snapshot.save_snapshot(data['uid'], t, snap)
+    print(res)
+
+    if not t:
         ret = {'action': 'err'}
     else:
-        newsfeed.add_snap(data['uid'], ret)
-        ret = {'action': 'ok', 'timestamp': res}
+        print(t)
+        newsfeed.add_snap(data['uid'], t)
+        ret = {'action': 'ok', 'timestamp': t}
     send(ret)
 
 def visit_book_request(data):

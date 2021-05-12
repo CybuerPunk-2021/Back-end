@@ -6,4 +6,5 @@ __all__ = [
     'snapshot',
     'userinfo',
     'visitbook',
+    'newsfeed'
     ]

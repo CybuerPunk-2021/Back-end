@@ -2,7 +2,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
-from .follow import get_user_following_list
+from .follow import get_user_following_uid_list
 
 
 # NEWSFEED 데이터베이스 구조
@@ -29,27 +29,29 @@ def get_all_newsfeed():
     return db.reference('NEWSFEED').get()
 
 def get_newsfeed_one_uid(uid):
-    if is_newfeed_exist(uid):
-        dir = db.reference('NEWSFEED').child(str(uid))
+    dir = db.reference('NEWSFEED').child(str(uid))
 
-        return dir.get()
-    else:
-        return None
+    return dir.get()
 
 def get_newsfeed_uid(uid):
-    lst = get_user_following_uid_list(uid, uid)
+    lst = get_user_following_uid_list(uid)
+    print(lst)
     ret = []
-    for follow in lst:
-        _newsfeed = get_newsfeed_one_uid(follow)
-        for _newstime in _newsfeed['snapshot']:
-            _ret = {}
-            _ret['timestamp'] = _newstime
-            _ret['uid'] = follow
-            _ret['nickname'] = _newsfeed['nickname']
-            ret.append(_ret)
+    if lst:
+        for follow in lst:
+            _newsfeed = get_newsfeed_one_uid(follow)
+            if _newsfeed:
+                for _newstime in _newsfeed['snapshot']:
+                    _ret = {}
+                    _ret['timestamp'] = _newstime
+                    _ret['uid'] = follow
+                    _ret['nickname'] = _newsfeed['nickname']
+                    ret.append(_ret)
 
-    ret = sorted(ret, key=f1, reverse=True)
-    return ret
+        ret = sorted(ret, key = (lambda x:x['timestamp']), reverse=True)
+        return ret
+    else:
+        return None
 
 def add_snap(uid, timestamp):
     dir = db.reference('NEWSFEED').child(str(uid)).child('snapshot')
@@ -58,7 +60,8 @@ def add_snap(uid, timestamp):
         t = [timestamp]
     else:
         t.append(timestamp)
-    dir.update(t)
+    dir = db.reference('NEWSFEED').child(str(uid))
+    dir.update({'snapshot': t})
 
 def mod_nick(uid, nickname):
     dir = db.reference('NEWSFEED').child(str(uid))

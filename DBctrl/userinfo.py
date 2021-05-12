@@ -94,13 +94,13 @@ def make_userinfo(login_id, login_pw, email, nickname):
         # 생성한 uid가 현재 사용하지 않는 uid값이 나올 때까지 반복
         while True:
             tmp_id = tmp_id + '0'
-            uid = etc.make_uid(str(tmp_id))
+            uid = make_uid(str(tmp_id))
 
             if get_userinfo_using_uid(int(uid)) is None:
                 break
         
         # password 해시화
-        hash_pw = etc.hash_password(login_pw)
+        hash_pw = hash_password(login_pw)
 
         # DB에 생성
         dir = db.reference('USERINFO').child(str(login_id))
@@ -151,9 +151,9 @@ def modify_password_using_login_id(login_id, check_pw, new_pw):
     if cur_user is not None:
         exist_pw = cur_user['login_pw']
         # 기존의 비밀번호가 맞는지 확인 후 변경
-        if exist_pw == etc.hash_password(check_pw):
+        if exist_pw == hash_password(check_pw):
             dir = db.reference('USERINFO').child(str(login_id))
-            dir.update({'login_pw':etc.hash_password(new_pw)})
+            dir.update({'login_pw':hash_password(new_pw)})
             print("Password is changed successfully.")
             return True
         # 비밀번호가 일치하지 않으면 False 반환
@@ -182,9 +182,9 @@ def modify_password_using_uid(uid, check_pw, new_pw):
         user_data = cur_user.popitem(last=True)
         exist_pw = user_data[1]['login_pw']
         # 기존의 비밀번호가 맞는지 확인 후 변경
-        if exist_pw == etc.hash_password(check_pw):
+        if exist_pw == hash_password(check_pw):
             dir = db.reference('USERINFO').child(str(user_data[0]))
-            dir.update({'login_pw':etc.hash_password(new_pw)})
+            dir.update({'login_pw':hash_password(new_pw)})
             print("Password is changed successfully.")
             return True
         # 비밀번호가 일치하지 않으면 False 반환
@@ -260,7 +260,7 @@ def login(login_id, password):
     """
     exist_pw = db.reference('USERINFO').child(str(login_id)).child('login_pw').get()
 
-    if exist_pw == etc.hash_password(password):
+    if exist_pw == hash_password(password):
         uid = get_user_uid(login_id)
         nickname = get_profile_nickname(uid)
         return [nickname, uid]
