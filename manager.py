@@ -60,9 +60,9 @@ def profile_img_update_size(data):
             data = socket.recv(4096)
             f.write(data)
         f.close()
-        ret = {'action': 'profile_img_update', 'type': True}
+        ret = {'action': 'profile_img_update', 'type': 'True'}
     except:
-        ret = {'action': 'profile_img_update', 'type': False}
+        ret = {'action': 'profile_img_update', 'type': 'False'}
     send(ret)
 
 def signup(data):
@@ -93,12 +93,12 @@ def signup(data):
                     uid = userinfo.make_userinfo(data['id'], data['pw'], data['email'], data['nickname'])
                     profile.make_profile(uid, data['id'], data['nickname'], get_timestamp())
                     newsfeed.make_newsfeed(uid, data['nickname'])
-                    ret = {'action': 'email auth', 'auth': True}
+                    ret = {'action': 'email auth', 'auth': 'True'}
                     send(ret)
                     del(email_auth[(data['id']), data['nickname']])
                     break
                 else:
-                    ret = {'action': 'email auth', 'auth': False}
+                    ret = {'action': 'email auth', 'auth': 'False'}
                     send(ret)
             else:
                 send('wrong action')
@@ -120,7 +120,7 @@ def login(data):
     pw = data['pw']
     res = userinfo.login(id, pw)
     if res == False:
-        ret = {'action': False}
+        ret = {'action': 'False'}
     else:
         ret = {'action':'True', 'nickname': res[0], 'uid': int(res[1])}
     send(ret)
@@ -130,7 +130,7 @@ def get_home(data):
     res = res[data['count'] * 2: (data['count'] + 1) * 2]
     for snap in res:
         snap['snapshot_intro'] = snapshot.get_snapshot_intro(snap['uid'], snap['timestamp'])
-        snap['like'] = snapshot.is_user_like_snapshot(data['uid'], snap['uid'], snap['timestamp'])
+        snap['like'] = str(snapshot.is_user_like_snapshot(data['uid'], snap['uid'], snap['timestamp']))
     ret = {'action': 'homeinfo', 'info': res}
     send(ret)
     return
@@ -199,12 +199,12 @@ def mod_email(data):
             if auth['action'] == 'email auth':
                 if email_auth[data['uid']] == auth['auth']:
                     userinfo.modify_email(userinfo.get_userinfo_using_uid(data['uid']), data['email'])
-                    ret = {'action': 'email auth', 'auth': True}
+                    ret = {'action': 'email auth', 'auth': 'True'}
                     send(ret)
                     del(email_auth[data['uid']])
                     break
                 else:
-                    ret = {'action': 'email auth', 'auth': False}
+                    ret = {'action': 'email auth', 'auth': 'False'}
                     send(ret)
             else:
                 send('wrong action')
