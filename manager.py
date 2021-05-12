@@ -55,8 +55,7 @@ def profile_img_update_size(data):
     try:
         path = '../data/img/profile/' + str(data['uid'])
         f = open(path, 'wb')
-        print(str(size))
-        print(int(size/4096) + 1)
+        
         for _ in range(int(size / 4096) + 1):
             data = socket.recv(4096)
             f.write(data)
