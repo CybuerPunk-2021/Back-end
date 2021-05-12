@@ -325,12 +325,15 @@ def update_profile_snapshot_preview(uid):
     uid(str) : 해당 프로필 유저의 uid
     """
     dir = db.reference('PROFILE').child(str(uid)).child('snapshot_info')
+    latest_snapshot = get_user_latest_made_snapshot(uid)
     # 제일 최근 생성한 스냅샷이 없다면 종료
-    if get_user_latest_made_snapshot(uid) is None:
+    if len(latest_snapshot) == 0:
         dir.delete()
         return
+
+    data = latest_snapshot.popitem(last=True)
+    timestamp, snapshot_data = data[0], data[1]
     
-    timestamp, snapshot_data = get_user_latest_made_snapshot(uid)
     # 현재 프로필의 최신 스냅샷 정보가 유지되고 있다면 종료
     if dir.child('timestamp').get() == timestamp:
         return
@@ -372,7 +375,7 @@ def save_snapshot(uid, timestamp, room_snapshot):
     # 유저의 프로필 내 최신 스냅샷 정보 동기화
     update_profile_snapshot_preview(uid)
 
-    return dir.child('timestamp').get()
+    return dir.get()
 
 # 스냅샷 소개글 수정
 def modify_snapshot_intro(uid, timestamp, modified_intro):
