@@ -38,6 +38,7 @@ class c_sck(Thread): # client socket thread object
                 data = json.loads(data) # convert data to json(dict)
                 manage(data, self.c_socket)
             except ConnectionResetError: # when connection is die
+                self.c_socket.close() # close socket
                 self.lst.remove(self) # remove self from client list
                 break # break loop
 
