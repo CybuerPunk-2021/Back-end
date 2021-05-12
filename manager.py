@@ -141,6 +141,7 @@ def profile_info(data):
         send('None')
     else:
         ret = {'action': 'profile_info', 'follower': res['num_follower'], 'self_intro': res['introduction']}
+        ret['snapshot_info'] = res['snapshot_info']        
     send(ret)
 
 def get_follower(data):
