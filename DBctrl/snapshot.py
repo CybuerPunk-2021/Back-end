@@ -373,9 +373,9 @@ def save_snapshot(uid, timestamp, room_snapshot):
     })
 
     # 유저의 프로필 내 최신 스냅샷 정보 동기화
-    #update_profile_snapshot_preview(uid)
+    update_profile_snapshot_preview(uid)
 
-    return dir.get()
+    return timestamp
 
 # 스냅샷 소개글 수정
 def modify_snapshot_intro(uid, timestamp, modified_intro):
