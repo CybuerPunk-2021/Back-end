@@ -327,7 +327,7 @@ def update_profile_snapshot_preview(uid):
     dir = db.reference('PROFILE').child(str(uid)).child('snapshot_info')
     latest_snapshot = get_user_latest_made_snapshot(uid)
     # 제일 최근 생성한 스냅샷이 없다면 종료
-    if len(latest_snapshot) == 0:
+    if (latest_snapshot is None) or (len(latest_snapshot) == 0):
         dir.delete()
         return
 
