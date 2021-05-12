@@ -91,6 +91,7 @@ def signup(data):
             if auth['action'] == 'email auth':
                 if email_auth[(data['id'], data['nickname'])] == auth['auth']:
                     userinfo.make_userinfo(data['id'], data['pw'], data['email'], data['nickname'])
+                    #profile.make_profile(uid, login_id, nickname, timestap)
                     newsfeed.make_newsfeed(userinfo.get_user_uid(data['id']), data['nickname'])
                     ret = {'action': 'email auth', 'auth': True}
                     send(ret)

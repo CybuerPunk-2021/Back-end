@@ -110,10 +110,7 @@ def make_userinfo(login_id, login_pw, email, nickname):
             'uid': uid
         })
 
-        # 유저 정보 생성 후 다른 데이터베이스 파일에 유저 구조 생성
-        make_profile(uid, login_id, nickname)
-
-        print("Producing " + login_id + " account success.")
+        print("Produce " + login_id + " account success.")
         return True
     # 현재 DB상에 해당 아이디의 사용자가 있으면 중단  
     else:
