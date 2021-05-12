@@ -138,7 +138,7 @@ def search_profile(input_string):
     """
     return [search_profile_nickname(input_string), search_profile_login_id(input_string)]
 
-def make_profile(uid, login_id, nickname, timestap):
+def make_profile(uid, login_id, nickname, timestamp):
     """
     해당 uid 값으로 초기 프로필 데이터를 세팅하는 함수
     생성에 성공하면 True, 실패하면 False 반환
