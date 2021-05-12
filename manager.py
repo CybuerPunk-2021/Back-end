@@ -86,6 +86,7 @@ def signup(data):
             if auth['action'] == 'email auth':
                 if email_auth[(data['id'], data['nickname'])] == auth['auth']:
                     userinfo.make_userinfo(data['id'], data['pw'], data['email'], data['nickname'])
+                    newsfeed.make_newsfeed(userinfo.get_user_uid(data['id']), data['nickname'])
                     ret = {'action': 'email auth', 'auth': True}
                     send(ret)
                     del(email_auth[(data['id']), data['nickname']])
@@ -161,6 +162,7 @@ def del_follow(data):
 
 def mod_nick(data):
     if profile.modify_nickname(data['uid'], data['nickname']):
+        newsfeed.mod_nick(data['uid'], data['nickname'])
         ret = {'action': 'nickname_ok'}
     else:
         ret = {'action': 'dup nick'}
@@ -261,6 +263,7 @@ def save_snapshot(data):
     if not res:
         ret = {'action': 'err'}
     else:
+        newsfeed.add_snap(data['uid'], ret)
         ret = {'action': 'ok', 'timestamp': res}
     send(ret)
 
@@ -293,10 +296,14 @@ def visit_book_write(data):
 
 def send(msg):
     global socket
-    socket.send(str(msg).encode())
+    msg = str(msg)
+    msg = msg.replace("\'", "\"")
+    print(msg)
+    socket.send(msg.encode())
 
 def get_timestamp():
     t = str(datetime.now())
+    t = t.replace('-', '')
     t = t.replace(':', '')
     t = t.replace(' ', '')
     t = t.replace('.', '')
