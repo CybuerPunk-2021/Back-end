@@ -155,6 +155,9 @@ def profile_info(data):
 
 def get_follower(data):
     res = follow.get_user_follower_uid_list(data['uid'])
+    for r in res:
+        r['nickname'] = profile.get_profile_nickname(r['uid'])
+
     if res:
         ret = {'action': 'follower', 'follower': res}
     else:
@@ -163,6 +166,9 @@ def get_follower(data):
 
 def get_following(data):
     res = follow.get_user_following_uid_list(data['uid'])
+    for r in res:
+        r['nickname'] = profile.get_profile_nickname(r['uid'])
+        
     if res:
         ret = {'action': 'following', 'following': res}
     else:
