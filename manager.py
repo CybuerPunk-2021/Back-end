@@ -7,9 +7,12 @@ import os.path
 
 email_auth = {}
 
-def manage(data, sck):
+def manage(data, sck, addr):
     global socket
+    global ipAddr
     socket = sck
+    ipAddr = addr
+    log.add_log(get_timestamp(), {'type': 'receive', 'content': data}, ipAddr)
     try:
         act = data['action']
         if act not in manage_list:
@@ -316,9 +319,11 @@ def visit_book_write(data):
 
 def send(msg):
     global socket
+    global ipAddr
     msg = str(msg)
     msg = msg.replace("\'", "\"")
     print(msg)
+    log.add_log(get_timestamp(), {'type': 'send', 'content': msg}, ipAddr)
     socket.send(msg.encode())
 
 def get_timestamp():
