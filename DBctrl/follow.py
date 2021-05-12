@@ -342,7 +342,7 @@ def is_following(compare_user_uid, target_user_uid):
         if relation_info is None:
             print("Relation " + str(relation_id) + " is not exist.")
             return None
-        if relation_info['to_uid'] == target_user_uid:
+        if relation_info['to_uid'] == int(target_user_uid):
             return relation_id
 
 def add_follow_info(from_uid, to_uid, relation_id):
