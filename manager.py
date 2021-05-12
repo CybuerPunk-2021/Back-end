@@ -90,9 +90,9 @@ def signup(data):
             auth = json.loads(auth)
             if auth['action'] == 'email auth':
                 if email_auth[(data['id'], data['nickname'])] == auth['auth']:
-                    userinfo.make_userinfo(data['id'], data['pw'], data['email'], data['nickname'])
-                    profile.make_profile(data['uid'], data['id'], data['nickname'], get_timestamp())
-                    newsfeed.make_newsfeed(userinfo.get_user_uid(data['id']), data['nickname'])
+                    uid = userinfo.make_userinfo(data['id'], data['pw'], data['email'], data['nickname'])
+                    profile.make_profile(uid, data['id'], data['nickname'], get_timestamp())
+                    newsfeed.make_newsfeed(uid, data['nickname'])
                     ret = {'action': 'email auth', 'auth': True}
                     send(ret)
                     del(email_auth[(data['id']), data['nickname']])
