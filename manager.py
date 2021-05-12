@@ -144,7 +144,10 @@ def profile_info(data, socket):
         send({'action': 'None'}, socket)
     else:
         ret = {'action': 'profile_info', 'follower': res['num_follower'], 'self_intro': res['introduction']}
-        ret['snapshot_info'] = res['snapshot_info']        
+        if 'snapshot_info' in res:
+            ret['snapshot_info'] = res['snapshot_info']        
+        else:
+            ret['snapshot_info'] = {}
     send(ret, socket)
 
 def get_follower(data, socket):
