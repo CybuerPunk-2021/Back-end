@@ -139,6 +139,7 @@ def search_profile(input_string):
     """
     return list(set(search_profile_using_nickname(input_string) + search_profile_using_login_id(input_string)))
 
+# 프로필 생성
 def make_profile(uid, login_id, nickname, timestamp):
     """
     해당 uid 값으로 초기 프로필 데이터를 세팅하는 함수
@@ -199,7 +200,6 @@ def modify_nickname(uid, new_name):
     dir.update({'nickname': new_name})
 
     return True
-
 # 간단 소개글 변경
 def modify_introduction(uid, new_intro):
     """
@@ -217,7 +217,6 @@ def modify_introduction(uid, new_intro):
 
     dir.update({'introduction':new_intro})
     return True
-
 # 프로필 이미지 최근 수정 시각 변경
 def modify_profile_image_time(uid, timestamp):
     """
@@ -228,7 +227,6 @@ def modify_profile_image_time(uid, timestamp):
     """
     dir = db.reference('PROFILE').child(str(uid))
     dir.update({'profile_image_time': timestamp})
-
 # 프로필 배경 이미지 최근 수정 시각 변경
 def modify_profile_background_image_time(uid, timestamp):
     """
@@ -240,6 +238,7 @@ def modify_profile_background_image_time(uid, timestamp):
     dir = db.reference('PROFILE').child(str(uid))
     dir.update({'bg_image_time': timestamp})
 
+# 회원탈퇴 시 프로필 데이터 삭제
 def delete_profile(uid):
     """
     유저의 프로필 정보를 삭제

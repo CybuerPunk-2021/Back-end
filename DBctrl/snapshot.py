@@ -302,10 +302,10 @@ def get_snapshot_intro(uid, timestamp):
     """
     return db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp)).child('snapshot_intro').get()
 
-# 어떤 유저가 스냅샷을 좋아요 했는지 확인하는 함수
+# 임의의 유저가 스냅샷을 좋아요 했는지 확인하는 함수
 def is_user_like_snapshot(cur_user_uid, snapshot_creator_uid, timestamp):
     """
-    어떤 유저가 해당 프로필의 유저가 생성한 스냅샷에 좋아요 표시를 했는지 확인하는 함수
+    임의의 유저가 해당 프로필의 유저가 생성한 스냅샷에 좋아요 표시를 했는지 확인하는 함수
 
     cur_user_uid(int) : 스냅샷에 좋아요 표시를 했는지 확인하고자 하는 유저의 uid
     snapshot_creator_uid(int) : 해당 스냅샷을 생성한 유저의 uid
@@ -392,17 +392,18 @@ def modify_snapshot_intro(uid, timestamp, modified_intro):
     """
     dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
     
-    if dir.get() is not None:
-        dir.update({'snapshot_intro':modified_intro})
-        
-        # 유저의 프로필 내 최신 스냅샷 정보 동기화
-        update_profile_snapshot_preview(uid)
-
-        print("Modify snapshot introduction success.")
-        return True
-    else:
+    # 해당 시각에 생성된 스냅샷이 없다면 False 반환
+    if dir.get() is None:
         print("There's no snapshot with that uid or timestamp.")
         return False
+    
+    dir.update({'snapshot_intro':modified_intro})
+    
+    # 유저의 프로필 내 최신 스냅샷 정보 동기화
+    update_profile_snapshot_preview(uid)
+
+    print("Modify snapshot introduction success.")
+    return True
 
 # 스냅샷 좋아요
 def like_snapshot(uid, like_uid, timestamp):

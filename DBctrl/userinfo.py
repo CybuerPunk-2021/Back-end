@@ -85,37 +85,35 @@ def make_userinfo(login_id, login_pw, email, nickname):
     login_pw(str) : 유저의 로그인 비밀번호
     email(str) : 유저의 인증 이메일주소
     """
-    # 현재 DB상에 해당 아이디의 사용자가 없으면 진행
-    if get_userinfo(str(login_id)) is None:
-        # uid 값 생성
-        tmp_id = login_id
-
-        # 생성한 uid가 현재 사용하지 않는 uid값이 나올 때까지 반복
-        while True:
-            tmp_id = tmp_id + '0'
-            uid = make_uid(str(tmp_id))
-
-            if get_userinfo_using_uid(int(uid)) is None:
-                break
-        
-        # password 해시화
-        hash_pw = hash_password(login_pw)
-
-        # DB에 생성
-        dir = db.reference('USERINFO').child(str(login_id))
-        dir.set({
-            'auth_email': str(email),
-            'login_pw': hash_pw,
-            'uid': uid,
-            'nickname': nickname
-        })
-
-        print("Produce " + login_id + " account success.")
-        return uid
-    # 현재 DB상에 해당 아이디의 사용자가 있으면 중단  
-    else:
+    # 현재 DB상에 해당 아이디의 사용자가 있으면 중단
+    if get_userinfo(str(login_id)) is not None:
         print("Already exist ID value.")
         return False
+
+    # uid 값 생성
+    tmp_id = login_id
+    # 생성한 uid가 현재 사용하지 않는 uid값이 나올 때까지 반복
+    while True:
+        tmp_id = tmp_id + '0'
+        uid = make_uid(str(tmp_id))
+
+        if get_userinfo_using_uid(int(uid)) is None:
+            break
+    
+    # password 해시화
+    hash_pw = hash_password(login_pw)
+
+    # DB에 생성
+    dir = db.reference('USERINFO').child(str(login_id))
+    dir.set({
+        'auth_email': str(email),
+        'login_pw': hash_pw,
+        'uid': uid,
+        'nickname': nickname
+    })
+
+    print("Produce " + login_id + " account success.")
+    return uid
 
 # 이메일 주소 변경
 def modify_email(login_id, email):
@@ -126,12 +124,13 @@ def modify_email(login_id, email):
     email(str) : 수정할 이메일 주소
     """
     dir = db.reference('USERINFO').child(str(login_id))
-    if dir.get() is not None:
-        dir.update({'auth_email':email})
-        return True
-    else:
+    # 해당 로그인 아이디의 유저 계정 데이터가 없다면 False 반환
+    if dir.get() is None:
         print("There's no " + login_id + " user.")
         return False
+    # 이메일 주소 업데이트 후 True 반환
+    dir.update({'auth_email':email})
+    return True
 
 # 비밀번호 변경(로그인 아이디)
 def modify_password_using_login_id(login_id, check_pw, new_pw):
@@ -144,23 +143,23 @@ def modify_password_using_login_id(login_id, check_pw, new_pw):
     new_pw(str) : 수정할 비밀번호
     """
     cur_user = get_userinfo(login_id)
-    # 해당 login ID의 유저가 있으면 진행
-    if cur_user is not None:
-        exist_pw = cur_user['login_pw']
-        # 기존의 비밀번호가 맞는지 확인 후 변경
-        if exist_pw == hash_password(check_pw):
-            dir = db.reference('USERINFO').child(str(login_id))
-            dir.update({'login_pw':hash_password(new_pw)})
-            print("Password is changed successfully.")
-            return True
-        # 비밀번호가 일치하지 않으면 False 반환
-        else:
-            print("Password is not correct.")
-            return False
+
     # 해당 login ID의 유저가 없으면 False 반환
-    else:
+    if cur_user is None:  
         print("Invalid user login ID.")
         return False
+    # 해당 login ID의 유저가 있으면 진행
+    exist_pw = cur_user['login_pw']
+    
+    # 기존의 비밀번호와 일치하지 않으면 False 반환
+    if exist_pw != hash_password(check_pw):
+        print("Password is not correct.")
+        return False
+    # 기존의 비밀번호와 일치하면 변경 후 True 반환
+    dir = db.reference('USERINFO').child(str(login_id))
+    dir.update({'login_pw':hash_password(new_pw)})
+    print("Password is changed successfully.")
+    return True
 
 # 비밀번호 변경(유저 UID)
 def modify_password_using_uid(uid, check_pw, new_pw):
@@ -201,26 +200,25 @@ def delete_userinfo(login_id):
 
     login_id(str) : 유저의 로그인 아이디
     """
-    # 현재 DB상에 해당 아이디의 사용자가 있으면 진행
-    if get_userinfo(str(login_id)) is not None:
-        # 유저의 uid 값 불러오기
-        uid = get_user_uid(login_id)
-
-        # 프로필, 방명록 정보 삭제
-        delete_user_follow_info(uid)
-        delete_visitbook(uid)
-        delete_profile(uid)
-
-        # DB에서 유저정보 삭제
-        dir = db.reference('USERINFO').child(str(login_id))
-        dir.delete()
-
-        print("Delete " + login_id + " account.")
-        return True
-    # 현재 DB상에 해당 아이디의 사용자가 없으면 중단  
-    else:
+    # 현재 DB상에 해당 아이디의 사용자가 없으면 중단
+    if get_userinfo(str(login_id)) is None:
         print("There's no ID in USERINFO DB.")
         return False
+
+    # 유저의 uid 값 불러오기
+    uid = get_user_uid(login_id)
+
+    # 프로필, 방명록 정보 삭제
+    delete_user_follow_info(uid)
+    delete_visitbook(uid)
+    delete_profile(uid)
+
+    # DB에서 유저정보 삭제
+    dir = db.reference('USERINFO').child(str(login_id))
+    dir.delete()
+
+    print("Delete " + login_id + " account.")
+    return True
 
 # 아이디, 이메일 중복체크
 def check_id_nickname_dup(login_id, nickname):
