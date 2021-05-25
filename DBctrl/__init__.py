@@ -8,5 +8,4 @@ __all__ = [
     'visitbook',
     'newsfeed',
     'log',
-    'new_follow'
     ]

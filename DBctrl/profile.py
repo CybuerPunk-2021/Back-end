@@ -1,11 +1,7 @@
 from firebase_admin import db
 
-from .follow import get_user_following_num
-from .follow import get_user_follower_num
-from .follow import update_profile_following_num
-from .follow import update_profile_follower_num
-from .follow import delete_user_all_follow_info
 from .snapshot import update_profile_snapshot_preview
+
 
 # PROFILE 데이터베이스 구조
 """
@@ -60,7 +56,7 @@ def get_all_profile():
     """
     return db.reference('PROFILE').get()
 
-# 유저 프로필
+# 유저 프로필 요청
 def get_profile(uid):
     """
     유저의 프로필 내용을 불러오는 함수
@@ -72,18 +68,13 @@ def get_profile(uid):
         return None
     
     dir = db.reference('PROFILE').child(str(uid))
-
-    # 팔로잉, 팔로워 수 동기화
-    if dir.child('num_following').get() != get_user_following_num(uid):
-        update_profile_following_num(uid)
-    if dir.child('num_follower').get() != get_user_follower_num(uid):
-        update_profile_follower_num(uid)
     
     # 유저의 프로필 내 최신 스냅샷 정보 동기화
     update_profile_snapshot_preview(uid)
 
     return dir.get()
 
+# 프로필 닉네임 요청
 def get_profile_nickname(uid):
     """
     해당 유저의 닉네임을 받는 함수
@@ -91,52 +82,62 @@ def get_profile_nickname(uid):
     uid(int) : 해당 프로필 유저의 uid
     """
     return db.reference('PROFILE').child(str(uid)).child('nickname').get()
-
 # 프로필 이미지 최근 수정 시각 요청
 def get_profile_image_time(uid):
     """
     제일 최근 유저의 프로필 이미지를 변경한 시각을 얻는 함수
     uid(int) : 해당 프로필 유저의 uid
     """
-    dir = db.reference('PROFILE').child(str(uid)).child('profile_image_time')
-    return dir.get()
-
+    return db.reference('PROFILE').child(str(uid)).child('profile_image_time').get()
 # 프로필 배경 이미지 최근 수정 시각 요청
 def get_profile_background_image_time(uid):
     """
     제일 최근 유저의 프로필 배경 이미지를 변경한 시각을 얻는 함수
     uid(int) : 해당 프로필 유저의 uid
     """
-    dir = db.reference('PROFILE').child(str(uid)).child('bg_image_time')
-    return dir.get()
+    return db.reference('PROFILE').child(str(uid)).child('bg_image_time').get()
+# 팔로잉 수 요청
+def get_following_num(uid):
+    """
+    유저의 팔로잉 수를 받는 함수
 
-def search_profile_nickname(nickname):
+    uid(str) : 유저의 uid
+    """
+    return db.reference('PROFILE').child(str(uid)).child('num_following').get() or 0
+# 팔로워 수 요청
+def get_follower_num(uid):
+    """
+    유저의 팔로워 수를 받는 함수
+
+    uid(str) : 유저의 uid
+    """
+    return db.reference('PROFILE').child(str(uid)).child('num_follower').get() or 0
+
+def search_profile_using_nickname(nickname):
     """
     해당 문자열을 포함하는 닉네임을 가진 유저를 검색하는 함수
 
     nickname(str) : 닉네임 검색 키워드
     """
     data = db.reference('PROFILE').order_by_child('nickname_upper').start_at(str(nickname.upper())).end_at(str(nickname.upper()) + '\uf8ff').get() or []
-    return len(data)
-
-def search_profile_login_id(login_id):
+    return list(data)
+def search_profile_using_login_id(login_id):
     """
     해당 문자열을 포함하는 로그인 아이디를 가진 유저를 검색하는 함수
 
     login_id(str) : 로그인 아이디 검색 키워드
     """
     data = db.reference('PROFILE').order_by_child('login_id_upper').start_at(str(login_id.upper())).end_at(str(login_id.upper()) + '\uf8ff').get() or []
-    return len(data)
-
+    return list(data)
 # 프로필 검색
 def search_profile(input_string):
     """
     해당 문자열을 포함하는 닉네임, 로그인 아이디를 가진 유저를 검색하는 함수
-    닉네임 검색 결과, 로그인 아이디 검색 결과를 각각 배열 2개의 인자로 return
+    닉네임 검색 결과, 로그인 아이디 검색 결과를 통해 uid 리스트를 반환한다.
 
     input_string(str) : 검색 키워드 문자열
     """
-    return [search_profile_nickname(input_string), search_profile_login_id(input_string)]
+    return list(set(search_profile_using_nickname(input_string) + search_profile_using_login_id(input_string)))
 
 def make_profile(uid, login_id, nickname, timestamp):
     """
@@ -195,9 +196,7 @@ def modify_nickname(uid, new_name):
     
     # NEWSFEED document에 nickname 값 변경
     dir = db.reference('NEWSFEED').child(str(uid))
-    dir.update({
-        'nickname': new_name,
-        })
+    dir.update({'nickname': new_name})
 
     return True
 
@@ -252,9 +251,6 @@ def delete_profile(uid):
     if get_profile(uid) is None:
         print("There's no UID in PROFILE DB.")
         return False
-
-    # 프로필 삭제 전 유저의 팔로우 정보 삭제
-    delete_user_all_follow_info(uid)
 
     # DB에서 삭제
     dir = db.reference('PROFILE').child(str(uid))

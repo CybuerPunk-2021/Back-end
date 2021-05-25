@@ -2,9 +2,8 @@ from firebase_admin import db
 
 from .etc import make_uid
 from .etc import hash_password
+from .follow import delete_user_follow_info
 from .profile import get_profile_nickname
-from .profile import make_profile
-from .profile import is_profile_exist
 from .profile import is_profile_nickname_exist
 from .profile import delete_profile
 from .visitbook import delete_visitbook
@@ -107,7 +106,8 @@ def make_userinfo(login_id, login_pw, email, nickname):
         dir.set({
             'auth_email': str(email),
             'login_pw': hash_pw,
-            'uid': uid
+            'uid': uid,
+            'nickname': nickname
         })
 
         print("Produce " + login_id + " account success.")
@@ -207,6 +207,7 @@ def delete_userinfo(login_id):
         uid = get_user_uid(login_id)
 
         # 프로필, 방명록 정보 삭제
+        delete_user_follow_info(uid)
         delete_visitbook(uid)
         delete_profile(uid)
 
