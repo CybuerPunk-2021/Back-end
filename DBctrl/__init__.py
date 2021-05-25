@@ -7,5 +7,6 @@ __all__ = [
     'userinfo',
     'visitbook',
     'newsfeed',
-    'log'
+    'log',
+    'new_follow'
     ]
