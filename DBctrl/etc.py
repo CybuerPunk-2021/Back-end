@@ -49,3 +49,14 @@ def get_all_data():
         return dir.get()
     else:
         return
+
+def increase_num(num):
+    """
+    갯수 1 증가를 위한 트랜잭션 함수
+    """
+    return num + 1 if num else 1
+def decrease_num(num):
+    """
+    갯수 1 감소를 위한 트랜잭션 함수
+    """
+    return num - 1 if num > 0 else 0

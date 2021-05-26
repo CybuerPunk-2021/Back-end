@@ -1,6 +1,7 @@
 from firebase_admin import db
 
 from .etc import check_list_3dim
+from .etc import increase_num
 
 # ITEM 데이터베이스 구조
 """
@@ -23,11 +24,18 @@ from .etc import check_list_3dim
 }
 """
 
-def increment_num(current_value):
+def increase_iid_num(category):
     """
-    iid 값 지정을 위한 번호 트랜잭션 함수
+    카테고리에 아이템을 추가할 때 item id 값을 정하기 위한 트랜잭션 함수
+
+    category(str) : 아이템을 추가할 카테고리 이름
     """
-    return current_value + 1 if current_value else 1
+    try:
+        dir = db.reference('ITEM').child(str(category)).child('latest_id_num')
+        return dir.transaction(increase_num)
+    except db.TransactionAbortedError:
+        print("Transaction failed. -> increase following num")
+        return False
 
 def get_all_item():
     """
@@ -37,7 +45,7 @@ def get_all_item():
 
 def get_item(category, iid):
     """
-    카테고리 내 아이템 정보를 삭제하는 함수
+    카테고리 내 아이템 정보를 얻는 함수
 
     category(str) : 아이템의 카테고리 이름
     iid(int) : 아이템의 카테고리 내 id
@@ -71,12 +79,11 @@ def add_item(category, item_name, scale):
     dir = db.reference('ITEM').child(str(category))
 
     # 아이템의 id 값을 결정하기 위한 번호 트랜잭션 작업
-    try:
-        new_item_num = dir.child('latest_id_num').transaction(increment_num)
-        print("Transaction completed.")
-    except db.TransactionAbortedError:
-        print("Transaction failed to commit.")
-        return False
+    while True:
+        new_item_num = increase_iid_num(category)
+        print(new_item_num)
+        if new_item_num is not False:
+            break
     
     # scale parameter는 3차원 리스트 타입이어야 함
     if check_list_3dim(scale) is False:
@@ -86,7 +93,7 @@ def add_item(category, item_name, scale):
     data = {
         'iid': new_item_num,
         'item_name': item_name,
-        'scale': scale
+        'scale': scale,
     }
 
     # 해당 카테고리를 신설하는 경우

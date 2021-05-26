@@ -1,8 +1,5 @@
 from firebase_admin import db
 
-from .snapshot import update_profile_snapshot_preview
-
-
 # PROFILE 데이터베이스 구조
 """
 'PROFILE':
@@ -64,14 +61,13 @@ def get_profile(uid):
 
     uid(int) : 해당 프로필 유저의 uid
     """
-    if is_profile_exist(str(uid)) is False:
+    dir = db.reference('PROFILE').child(str(uid))
+
+    # 해당 uid의 프로필 정보가 없다면 None 반환
+    if dir.get() is None:
         return None
     
-    dir = db.reference('PROFILE').child(str(uid))
-    
-    # 유저의 프로필 내 최신 스냅샷 정보 동기화
-    update_profile_snapshot_preview(uid)
-
+    # 정보가 존재하면 프로필 정보 반환
     return dir.get()
 
 # 프로필 닉네임 요청
@@ -148,10 +144,6 @@ def make_profile(uid, login_id, nickname, timestamp):
     uid(str) : 해당 프로필 유저의 uid
     login_id(str) : 해당 프로필 유저의 로그인 아이디
     """
-    # 현재 DB상에 같은 uid 값이 있으면 중단
-    if get_profile(str(uid)) is not None:
-        print("Already exist same UID.")
-        return False
     
     # 현재 DB상에 같은 uid 값이 없으면 진행
     dir = db.reference('PROFILE').child(str(uid))
@@ -178,18 +170,13 @@ def modify_nickname(uid, new_name):
     uid(str) : 해당 프로필 유저의 uid
     new_name(str) : 변경할 닉네임 정보
     """
-    dir = db.reference('PROFILE').child(str(uid))
-    # 유효한 유저의 uid 값이 아니면 False 반환
-    if dir.get() is None:
-        print("Invalid UID value.")
-        return False
-
     # 이미 다른 유저가 사용 중인 닉네임이라면 False 반환
     if is_profile_nickname_exist(new_name) is True:
         print("Already used nickname value.")
         return False
 
     # PROFILE document에 nickname 값 변경
+    dir = db.reference('PROFILE').child(str(uid))
     dir.update({
         'nickname': new_name,
         'nickname_upper': new_name.upper()
@@ -210,11 +197,13 @@ def modify_introduction(uid, new_intro):
     new_intro(str) : 변경할 간단 소개글 정보
     """
     dir = db.reference('PROFILE').child(str(uid))
+
     # 유효한 유저의 uid 값이 아니면 False 반환
     if dir.get() is None:
         print("Invalid UID value.")
         return False
 
+    # 소개글 수정 후 True 반환
     dir.update({'introduction':new_intro})
     return True
 # 프로필 이미지 최근 수정 시각 변경
@@ -247,14 +236,14 @@ def delete_profile(uid):
     login_id(str) : 유저의 로그인 아이디
     """
     # 현재 DB상에 해당 uid의 데이터가 없으면 중단
-    if get_profile(uid) is None:
+    if is_profile_exist(uid) is False:
         print("There's no UID in PROFILE DB.")
         return False
 
     # DB에서 삭제
     dir = db.reference('PROFILE').child(str(uid))
-    loginID = dir.child('login_id').get()
+    login_id = dir.child('login_id').get()
     dir.delete()
 
-    print("Delete profile.(uid : " + str(uid) + ", login ID : " + str(loginID) + ")")
+    print("Delete profile.(uid : " + str(uid) + ", login ID : " + str(login_id) + ")")
     return True

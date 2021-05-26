@@ -216,7 +216,7 @@ def mod_email(data, socket):
             auth = json.loads(auth)
             if auth['action'] == 'email auth':
                 if email_auth[data['uid']] == auth['auth']:
-                    userinfo.modify_email(userinfo.get_userinfo_using_uid(data['uid']), data['email'])
+                    userinfo.modify_email(userinfo.get_login_id_using_uid(data['uid']), data['email'])
                     ret = {'action': 'email auth', 'auth': 'True'}
                     send(ret, socket)
                     del(email_auth[data['uid']])

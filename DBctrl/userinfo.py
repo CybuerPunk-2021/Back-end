@@ -35,37 +35,38 @@ def get_userinfo(login_id):
     """
     return db.reference('USERINFO').child(str(login_id)).get()
 
-def get_userinfo_using_uid(uid):
+def get_login_id_using_uid(uid):
     """
     계정의 uid를 이용해 유저 정보를 얻는 함수
-    정보가 있으면 로그인 아이디와 userinfo를 반환, 없으면 None 반환
+    정보가 있으면 해당 계정의 로그인 아이디 반환, 없으면 None 반환
 
     uid(int) : 찾고자 하는 계정의 uid 값
     """
     dir = db.reference('USERINFO')
-    founded_info = dir.order_by_child('uid').equal_to(str(uid)).get()
-    if len(founded_info) > 0:
-        data = founded_info.popitem(last=True)
-        login_id = data[0]
-        return login_id
-    else:
+    founded_info = list(dir.order_by_child('uid').equal_to(str(uid)).get())
+    
+    # 해당 uid의 유저 정보가 없으면 None 반환
+    if len(founded_info) == 0:
         return None
 
-def get_userinfo_using_email(email):
+    # 해당 uid의 유저 정보가 있으면 로그인 아이디 반환
+    return founded_info[0]
+
+def get_login_id_using_email(email):
     """
     가입할 때 입력한 이메일 주소로 계정 로그인 아이디를 찾는 함수
-    정보가 있으면 해당 계정의 userinfo 데이터를 반환, 없으면 None 반환
+    정보가 있으면 해당 계정의 로그인 아이디 반환, 없으면 None 반환
 
     email(str) : 찾고자 하는 계정의 이메일 주소 정보 
     """
     dir = db.reference('USERINFO')
-    founded_info = dir.order_by_child('auth_email').equal_to(str(email)).get()
-    if len(founded_info) > 0:
-        data = founded_info.popitem(last=True)
-        login_id = data[0]
-        return login_id
-    else:
+    founded_info = list(dir.order_by_child('auth_email').equal_to(str(email)).get())
+    
+    # 해당 이메일 주소로 인증한 유저 정보가 없으면 None 반환
+    if len(founded_info) == 0:
         return None
+
+    return founded_info[0]
 
 def get_user_uid(login_id):
     """
@@ -97,7 +98,7 @@ def make_userinfo(login_id, login_pw, email, nickname):
         tmp_id = tmp_id + '0'
         uid = make_uid(str(tmp_id))
 
-        if get_userinfo_using_uid(int(uid)) is None:
+        if get_login_id_using_uid(int(uid)) is None:
             break
     
     # password 해시화
@@ -124,10 +125,12 @@ def modify_email(login_id, email):
     email(str) : 수정할 이메일 주소
     """
     dir = db.reference('USERINFO').child(str(login_id))
+
     # 해당 로그인 아이디의 유저 계정 데이터가 없다면 False 반환
     if dir.get() is None:
         print("There's no " + login_id + " user.")
         return False
+
     # 이메일 주소 업데이트 후 True 반환
     dir.update({'auth_email':email})
     return True
@@ -148,13 +151,15 @@ def modify_password_using_login_id(login_id, check_pw, new_pw):
     if cur_user is None:  
         print("Invalid user login ID.")
         return False
-    # 해당 login ID의 유저가 있으면 진행
+
+    # 해당 login ID의 유저가 있으면 변경 진행
     exist_pw = cur_user['login_pw']
     
     # 기존의 비밀번호와 일치하지 않으면 False 반환
     if exist_pw != hash_password(check_pw):
         print("Password is not correct.")
         return False
+    
     # 기존의 비밀번호와 일치하면 변경 후 True 반환
     dir = db.reference('USERINFO').child(str(login_id))
     dir.update({'login_pw':hash_password(new_pw)})
@@ -173,24 +178,25 @@ def modify_password_using_uid(uid, check_pw, new_pw):
     """
     dir = db.reference('USERINFO')
     cur_user = dir.order_by_child('uid').equal_to(str(uid)).get()
-    # 해당 uid의 유저가 존재하면 진행
-    if len(cur_user) > 0:
-        user_data = cur_user.popitem(last=True)
-        exist_pw = user_data[1]['login_pw']
-        # 기존의 비밀번호가 맞는지 확인 후 변경
-        if exist_pw == hash_password(check_pw):
-            dir = db.reference('USERINFO').child(str(user_data[0]))
-            dir.update({'login_pw': hash_password(new_pw)})
-            print("Password is changed successfully.")
-            return True
-        # 비밀번호가 일치하지 않으면 False 반환
-        else:
-            print("Password is not correct.")
-            return False
+
     # 해당 uid의 유저가 없으면 False 반환
-    else:
+    if len(cur_user) == 0:
         print("Invalid user UID.")
         return False
+
+    user_data = cur_user.popitem(last=True)
+    exist_pw = user_data[1]['login_pw']
+
+    # 비밀번호가 일치하지 않으면 False 반환
+    if exist_pw != hash_password(check_pw):
+        print("Password is not correct.")
+        return False
+
+    # 기존의 비밀번호가 맞는지 확인 후 변경
+    dir = db.reference('USERINFO').child(str(user_data[0]))
+    dir.update({'login_pw': hash_password(new_pw)})
+    print("Password is changed successfully.")
+    return True
 
 # 유저 계정 삭제
 def delete_userinfo(login_id):
@@ -254,11 +260,13 @@ def login(login_id, password):
     login_id(str) : 입력한 사용자 로그인 ID
     password(str) : 입력한 사용자 로그인 패스워드
     """
-    exist_pw = db.reference('USERINFO').child(str(login_id)).child('login_pw').get()
+    user_data = get_userinfo(login_id)
+    exist_pw = user_data['login_pw']
 
-    if exist_pw == hash_password(password):
-        uid = get_user_uid(login_id)
-        nickname = get_profile_nickname(uid)
-        return [nickname, uid]
-    else:
+    # 비밀번호가 일치하지 않는다면 False 반환
+    if exist_pw != hash_password(password):
         return False
+
+    # 비밀번호가 일치하면 닉네임, uid 정보 반환
+    nickname = get_profile_nickname(user_data['uid'])
+    return [nickname, user_data['uid']]

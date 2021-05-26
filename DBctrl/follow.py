@@ -1,5 +1,8 @@
 from firebase_admin import db
 
+from .etc import increase_num
+from .etc import decrease_num
+
 import asyncio
 
 # FOLLOW 데이터베이스 구조
@@ -23,17 +26,6 @@ import asyncio
 }
 """
 
-def increase_num(follow_num):
-    """
-    팔로잉, 팔로워 수 1 증가를 위한 트랜잭션 함수
-    """
-    return follow_num + 1 if follow_num else 1
-def decrease_num(follow_num):
-    """
-    팔로잉, 팔로워 수 1 감소를 위한 트랜잭션 함수
-    """
-    return follow_num - 1 if follow_num > 0 else 0
-
 def increase_following_num(uid):
     """
     팔로잉 리스트에 유저를 추가한 후
@@ -41,8 +33,12 @@ def increase_following_num(uid):
 
     uid(int) : 팔로잉 수를 증가시킬 유저의 uid
     """
-    dir = db.reference('PROFILE').child(str(uid)).child('num_following')
-    return dir.transaction(increase_num)
+    try:
+        dir = db.reference('PROFILE').child(str(uid)).child('num_following')
+        return dir.transaction(increase_num)
+    except db.TransactionAbortedError:
+        print("Transaction failed. -> increase following num")
+        return False
 def increase_follower_num(uid):
     """
     팔로잉 리스트에 유저를 추가한 후
@@ -50,8 +46,12 @@ def increase_follower_num(uid):
 
     uid(int) : 팔로잉 수를 증가시킬 유저의 uid
     """
-    dir = db.reference('PROFILE').child(str(uid)).child('num_follower')
-    return dir.transaction(increase_num)
+    try:
+        dir = db.reference('PROFILE').child(str(uid)).child('num_follower')
+        return dir.transaction(increase_num)
+    except db.TransactionAbortedError:
+        print("Transaction failed. -> increase follower num")
+        return False
 def decrease_following_num(uid):
     """
     팔로잉 리스트에 유저를 삭제한 후
@@ -59,8 +59,12 @@ def decrease_following_num(uid):
 
     uid(int) : 팔로잉 수를 감소시킬 유저의 uid
     """
-    dir = db.reference('PROFILE').child(str(uid)).child('num_following')
-    return dir.transaction(decrease_num)
+    try:
+        dir = db.reference('PROFILE').child(str(uid)).child('num_following')
+        return dir.transaction(decrease_num)
+    except db.TransactionAbortedError:
+        print("Transaction failed. -> decrease following num")
+        return False
 def decrease_follower_num(uid):
     """
     팔로잉 리스트에 유저를 삭제한 후
@@ -68,8 +72,12 @@ def decrease_follower_num(uid):
 
     uid(int) : 팔로잉 수를 감소시킬 유저의 uid
     """
-    dir = db.reference('PROFILE').child(str(uid)).child('num_follower')
-    return dir.transaction(decrease_num)
+    try:
+        dir = db.reference('PROFILE').child(str(uid)).child('num_follower')
+        return dir.transaction(decrease_num)
+    except db.TransactionAbortedError:
+        print("Transaction failed. -> decrease follower num")
+        return False
 
 def get_all_follow_info():
     """
@@ -145,7 +153,6 @@ async def add_user_in_follower_list(list_host_uid, list_add_uid, timestamp):
         # 유저가 추가된 목록의 유저의 팔로워 수 증가
         increase_follower_num(list_host_uid)
         return True
-    
 async def delete_user_in_following_list(list_host_uid, list_delete_uid):
     """
     언팔로우 시 host 유저의 팔로워 목록에서 delete 유저를 지우는 함수
