@@ -24,6 +24,13 @@ def add_log(timestamp, data, ip_address):
         'IP': ip_address
         })
 
+def add_error_log(timestamp, error_data, ip_address):
+    dir = db.reference('ERROR').child(timestamp)
+    dir.set({
+        'data': error_data,
+        'IP': ip_address
+        })
+
 def search_log(from_time, to_time):
     # 검색 날짜가 to 시각이 from 시각보다 앞서면 False 출력
     if from_time > to_time:
