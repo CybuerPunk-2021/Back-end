@@ -328,6 +328,12 @@ def visit_book_write(data, socket):
     else:
         ret = {'action': 'err'}
     send(ret, socket)
+
+def search(data, socket):
+    query = profile.search_profile(data['query'])
+    res = {'action': 'search', 'result': query}
+    send(res)
+    
     
 
 def send(msg, socket):
@@ -367,5 +373,6 @@ manage_list = {
     'snapshot_roominfo': get_snapshot_item_list,
     'snapshot_save': save_snapshot,
     'visit_book_request': visit_book_request,
-    'visit_book_write': visit_book_write
+    'visit_book_write': visit_book_write,
+    'search': search
 }
