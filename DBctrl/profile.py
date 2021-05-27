@@ -109,31 +109,22 @@ def get_follower_num(uid):
     """
     return db.reference('PROFILE').child(str(uid)).child('num_follower').get() or 0
 
-def search_profile_using_nickname(nickname):
+# 프로필 검색
+def search_profile(nickname):
     """
     해당 문자열을 포함하는 닉네임을 가진 유저를 검색하는 함수
+    검색한 유저의 uid, 닉네임 정보 리스트를 반환한다.
 
     nickname(str) : 닉네임 검색 키워드
     """
-    data = db.reference('PROFILE').order_by_child('nickname_upper').start_at(str(nickname.upper())).end_at(str(nickname.upper()) + '\uf8ff').get() or []
-    return list(data)
-def search_profile_using_login_id(login_id):
-    """
-    해당 문자열을 포함하는 로그인 아이디를 가진 유저를 검색하는 함수
+    search_data = db.reference('PROFILE').order_by_child('nickname_upper').start_at(str(nickname.upper())).end_at(str(nickname.upper()) + '\uf8ff').get()
+    return_list = []
+    
+    if len(search_data) > 0:
+        for uid, data in search_data.items():
+            return_list.append({'uid': uid, 'nickname': data['nickname']})
 
-    login_id(str) : 로그인 아이디 검색 키워드
-    """
-    data = db.reference('PROFILE').order_by_child('login_id_upper').start_at(str(login_id.upper())).end_at(str(login_id.upper()) + '\uf8ff').get() or []
-    return list(data)
-# 프로필 검색
-def search_profile(input_string):
-    """
-    해당 문자열을 포함하는 닉네임, 로그인 아이디를 가진 유저를 검색하는 함수
-    닉네임 검색 결과, 로그인 아이디 검색 결과를 통해 uid 리스트를 반환한다.
-
-    input_string(str) : 검색 키워드 문자열
-    """
-    return list(set(search_profile_using_nickname(input_string) + search_profile_using_login_id(input_string)))
+    return return_list
 
 # 프로필 생성
 def make_profile(uid, login_id, nickname, timestamp):
