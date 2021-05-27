@@ -3,6 +3,8 @@ from firebase_admin import db
 from .etc import increase_num
 from .etc import decrease_num
 
+from pprint import pprint
+
 # VISITBOOK 데이터베이스 구조
 """
 'VISITBOOK':
@@ -175,9 +177,11 @@ def get_comment_list(uid):
         print("There's no comment data in " + str(uid) + "'s visitbook.")
         return None
     
-    # 댓글 데이터가 있다면 리스트로 변환
+    # 불러온 데이터에서 리스트로 변경하기 위해 comment_num 속성 제거
     if comment_data.get('comment_num') is not None:
         del comment_data['comment_num']
+
+    # 리스트로 변환
     for comment_id, data in comment_data.items():
         # 답글 정보가 있다면 제거
         if data.get('reply') is not None:
@@ -186,7 +190,9 @@ def get_comment_list(uid):
         data['cid'] = comment_id
 
     # 댓글 정보 리스트 반환
-    return list(comment_data.values())
+    return_list = list(comment_data.values())
+    return_list.reverse()
+    return return_list
 
 # 답글 리스트 요청
 def get_comment_reply_list(uid, cid):
@@ -220,7 +226,10 @@ def get_comment_reply_list(uid, cid):
         data['reply_cid'] = comment_id
 
     # 댓글 정보 리스트 반환
-    return list(reply_data.values())
+    return_list = list(reply_data.values())
+    return_list.reverse()
+    return return_list
+
 
 # 방명록 댓글 갯수 요청
 def get_comment_num(uid):
