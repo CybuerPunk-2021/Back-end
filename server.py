@@ -61,14 +61,6 @@ s_sck.bind((host, port)) # bind
 s_sck.listen(max_listen) # listen
 create_thread(s_sck) # create new c_sck thread
 
-
-app = Flask(__name__)
-@app.route('/')
-def main():
-    return ""
-
-app.run(host = host, port = 5501)
-
 while True: # repeat
     inp = input() # input data
     if inp == 'q': # if input is 'q' then
