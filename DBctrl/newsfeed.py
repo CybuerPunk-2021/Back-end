@@ -38,7 +38,7 @@ def get_newsfeed_uid(uid):
     if lst:
         for follow in lst:
             _newsfeed = get_newsfeed_one_uid(follow)
-            if _newsfeed:
+            if _newsfeed and 'snapshot' in _newsfeed:
                 for _newstime in _newsfeed['snapshot']:
                     _ret = {}
                     _ret['timestamp'] = _newstime

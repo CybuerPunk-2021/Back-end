@@ -4,6 +4,7 @@ from random import randint
 from sendEmail import send_mail
 import json
 import os.path
+import traceback
 
 email_auth = {}
 
@@ -18,7 +19,7 @@ def manage(data, sck, addr):
         manage_list[act](data, socket)
     except Exception as e:
         send({'action': 'wrong msg format'}, socket)
-        print(str(e))
+        traceback.print_exc()
     return
 
 def profile_img_request_size(data, socket):
@@ -43,7 +44,7 @@ def profile_img_request_size(data, socket):
             send({'action': 'wrong uid'}, socket)
     except Exception as e:
         send({'action': 'wrong msg format'}, socket)
-        print(e)
+        traceback.print_exc()
         return
 
 def profile_img_update_size(data, socket):
@@ -62,7 +63,7 @@ def profile_img_update_size(data, socket):
         ret = {'action': 'profile_img_update', 'type': 'True'}
         profile.modify_profile_image_time(data['uid'], t)
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         ret = {'action': 'profile_img_update', 'type': 'False'}
     send(ret, socket)
 
@@ -106,7 +107,7 @@ def signup(data, socket):
                 break
     except Exception as e:
         send({'action': 'wrong format'}, socket)
-        print(e)
+        traceback.print_exc()
         del(email_auth[(data['id']), data['nickname']])
         return
 
