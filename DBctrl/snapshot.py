@@ -250,8 +250,7 @@ def get_user_snapshot(uid):
     if dir.get() is None:
         print(str(uid) + " user doesn't make snapshot yet.")
         return None
-    else:
-        return dir.get()
+    return dir.get()
 
 def get_snapshot(uid, timestamp):
     """
@@ -266,8 +265,7 @@ def get_snapshot(uid, timestamp):
     if dir.get() is None:
         print("There's no snapshot data which was made at " + str(timestamp) + ".")
         return None
-    else:
-        return dir.get()
+    return dir.get()
 
 def get_user_latest_made_snapshot(uid):
     """
@@ -275,7 +273,7 @@ def get_user_latest_made_snapshot(uid):
 
     uid(int) : 최근 스냅샷 데이터를 얻을 유저의 uid
     """
-    return db.reference('SNAPSHOT').child(str(uid)).order_by_value().limit_to_last(1).get() or None
+    return db.reference('SNAPSHOT').child(str(uid)).order_by_value().limit_to_last(1).get() or {}
 
 # 스냅샷 아이템 리스트
 def get_snapshot_item(uid, timestamp):
@@ -327,7 +325,7 @@ def update_profile_snapshot_preview(uid):
     dir = db.reference('PROFILE').child(str(uid)).child('snapshot_info')
     latest_snapshot = get_user_latest_made_snapshot(uid)
     # 제일 최근 생성한 스냅샷이 없다면 종료
-    if (latest_snapshot is None) or (len(latest_snapshot) == 0):
+    if len(latest_snapshot) == 0:
         dir.delete()
         return
 
@@ -349,7 +347,7 @@ def update_profile_snapshot_preview(uid):
         'like_num': like_num,
         'timestamp': timestamp,
     })
-    return dir.child('timestamp').get()
+    return timestamp
 
 # 스냅샷 생성
 def save_snapshot(uid, timestamp, room_snapshot):
@@ -426,6 +424,7 @@ def like_snapshot(uid, like_uid, timestamp):
     # 스냅샷에 처음 좋아요 표시를 남기는 경우
     if user_list is None:
         dir.update({'like_user': [like_uid]})
+        
         print(str(like_uid) + " likes " + str(uid) + "'s " +  str(timestamp) + " snapshot.")
         return True
 
