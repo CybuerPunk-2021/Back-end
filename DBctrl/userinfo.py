@@ -64,7 +64,7 @@ def get_login_id_using_email(email):
     
     # 해당 이메일 주소로 인증한 유저 정보가 없으면 None 반환
     if len(founded_info) == 0:
-        return None
+        return []
 
     return founded_info
 
