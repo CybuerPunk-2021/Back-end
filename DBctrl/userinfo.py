@@ -47,7 +47,7 @@ def get_login_id_using_uid(uid):
     
     # 해당 uid의 유저 정보가 없으면 None 반환
     if len(founded_info) == 0:
-        return []
+        return None
 
     # 해당 uid의 유저 정보가 있으면 로그인 아이디 반환
     return founded_info
@@ -64,7 +64,7 @@ def get_login_id_using_email(email):
     
     # 해당 이메일 주소로 인증한 유저 정보가 없으면 None 반환
     if len(founded_info) == 0:
-        return None
+        return []
 
     return founded_info
 
