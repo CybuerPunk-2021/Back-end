@@ -364,8 +364,10 @@ def modify_pw(data, socket):
     ret = {'action': 'moodify_pw'}
     if data['id'] in res:
         pw = modify_pw_sendEmail(data['email'])
-        # modify DB pw
-        ret['result'] = 'ok'
+        if userinfo.modify_unknown_password_using_login_id(data['id'], pw):
+            ret['result'] = 'ok'
+        else:
+            ret['result'] = 'err'
     else:
         ret['result'] = 'err'
     send(ret, socket)
