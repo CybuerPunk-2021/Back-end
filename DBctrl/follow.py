@@ -3,6 +3,8 @@ from firebase_admin import db
 from .etc import increase_num
 from .etc import decrease_num
 
+import asyncio
+
 # FOLLOW 데이터베이스 구조
 """
 'FOLLOW':
@@ -24,7 +26,7 @@ from .etc import decrease_num
 }
 """
 
-def increase_following_num(uid):
+async def increase_following_num(uid):
     """
     팔로잉 리스트에 유저를 추가한 후
     PROFILE document의 팔로잉 숫자를 1 증가시키는 함수
@@ -37,7 +39,7 @@ def increase_following_num(uid):
     except db.TransactionAbortedError:
         print("Transaction failed. -> increase following num")
         return False
-def increase_follower_num(uid):
+async def increase_follower_num(uid):
     """
     팔로잉 리스트에 유저를 추가한 후
     PROFILE document의 팔로잉 숫자를 1 증가시키는 함수
@@ -50,7 +52,7 @@ def increase_follower_num(uid):
     except db.TransactionAbortedError:
         print("Transaction failed. -> increase follower num")
         return False
-def decrease_following_num(uid):
+async def decrease_following_num(uid):
     """
     팔로잉 리스트에 유저를 삭제한 후
     PROFILE document의 팔로잉 숫자를 1 감소시키는 함수
@@ -63,7 +65,7 @@ def decrease_following_num(uid):
     except db.TransactionAbortedError:
         print("Transaction failed. -> decrease following num")
         return False
-def decrease_follower_num(uid):
+async def decrease_follower_num(uid):
     """
     팔로잉 리스트에 유저를 삭제한 후
     PROFILE document의 팔로잉 숫자를 1 감소시키는 함수
@@ -109,7 +111,7 @@ def get_user_follower_uid_list(uid):
     follower_dict =  db.reference('FOLLOW').child(str(uid)).child('follower').get() or {}
     return list(follower_dict.keys())
 
-def add_user_in_following_list(list_host_uid, list_add_uid, timestamp):
+async def add_user_in_following_list(list_host_uid, list_add_uid, timestamp):
     """
     팔로잉 관계 형성 시 host 유저의 팔로잉 목록에 add 유저를 넣는 함수
 
@@ -126,11 +128,8 @@ def add_user_in_following_list(list_host_uid, list_add_uid, timestamp):
     else:
         # from이 to를 팔로우하고 있지 않다면 데이터 입력
         dir.update({str(list_add_uid): timestamp})
-        
-        # 유저가 추가된 목록의 유저의 팔로잉 수 증가
-        increase_following_num(list_host_uid)
         return True
-def add_user_in_follower_list(list_host_uid, list_add_uid, timestamp):
+async def add_user_in_follower_list(list_host_uid, list_add_uid, timestamp):
     """
     팔로잉 관계 형성 시 host 유저의 팔로워 목록에 add 유저를 넣는 함수
 
@@ -147,11 +146,8 @@ def add_user_in_follower_list(list_host_uid, list_add_uid, timestamp):
     else:
         # from이 to를 팔로우하고 있지 않다면 데이터 입력
         dir.update({str(list_add_uid): timestamp})
-
-        # 유저가 추가된 목록의 유저의 팔로워 수 증가
-        increase_follower_num(list_host_uid)
         return True
-def delete_user_in_following_list(list_host_uid, list_delete_uid):
+async def delete_user_in_following_list(list_host_uid, list_delete_uid):
     """
     언팔로우 시 host 유저의 팔로워 목록에서 delete 유저를 지우는 함수
 
@@ -160,11 +156,8 @@ def delete_user_in_following_list(list_host_uid, list_delete_uid):
     """
     dir = db.reference('FOLLOW').child(str(list_host_uid)).child('following').child(str(list_delete_uid))
     dir.delete()
-
-    # 유저가 삭제된 목록의 유저의 팔로워 수 감소
-    decrease_following_num(list_host_uid)
     return True
-def delete_user_in_follower_list(list_host_uid, list_delete_uid):
+async def delete_user_in_follower_list(list_host_uid, list_delete_uid):
     """
     언팔로우 시 host 유저의 팔로워 목록에서 delete 유저를 지우는 함수
 
@@ -173,13 +166,10 @@ def delete_user_in_follower_list(list_host_uid, list_delete_uid):
     """
     dir = db.reference('FOLLOW').child(str(list_host_uid)).child('follower').child(str(list_delete_uid))
     dir.delete()
-
-    # 유저가 삭제된 목록의 유저의 팔로워 수 감소
-    decrease_follower_num(list_host_uid)
     return True
 
 # 팔로우
-def follow_user(from_uid, to_uid, timestamp):
+async def follow_user(from_uid, to_uid, timestamp):
     """
     from user가 to user를 팔로우할 때의 DB 데이터를 설정하는 함수
 
@@ -194,12 +184,17 @@ def follow_user(from_uid, to_uid, timestamp):
     timestamp(str) : 팔로우 관계 형성 시각
     """
     # 각 유저의 팔로잉, 팔로워 리스트에 상대방을 추가
-    add_user_in_following_list(from_uid, to_uid, timestamp)
-    add_user_in_follower_list(to_uid, from_uid, timestamp)
-
+    await asyncio.wait([
+        add_user_in_following_list(from_uid, to_uid, timestamp),
+        # 유저가 추가된 목록의 유저의 팔로잉 수 증가
+        increase_following_num(from_uid),
+        add_user_in_follower_list(to_uid, from_uid, timestamp),
+        # 유저가 추가된 목록의 유저의 팔로워 수 증가
+        increase_follower_num(to_uid)
+    ])
     print("Follow (" + str(from_uid) + " -> " + str(to_uid) + ")")
 # 언팔로우
-def unfollow_user(from_uid, to_uid):
+async def unfollow_user(from_uid, to_uid):
     """
     from user가 to user를 언팔로우할 때의 DB 데이터를 설정하는 함수
 
@@ -214,8 +209,14 @@ def unfollow_user(from_uid, to_uid):
     timestamp(str) : 팔로우 관계 형성 시각
     """
     # 각 유저의 팔로잉, 팔로워 리스트에 상대방을 추가
-    delete_user_in_following_list(from_uid, to_uid)
-    delete_user_in_follower_list(to_uid, from_uid)
+    await asyncio.wait([
+        delete_user_in_following_list(from_uid, to_uid),
+        # 유저가 삭제된 목록의 유저의 팔로워 수 감소
+        decrease_following_num(from_uid),
+        delete_user_in_follower_list(to_uid, from_uid),
+        # 유저가 삭제된 목록의 유저의 팔로워 수 감소
+        decrease_follower_num(to_uid)
+    ])
 
     print("Unfollow (" + str(from_uid) + " -> " + str(to_uid) + ")")
 

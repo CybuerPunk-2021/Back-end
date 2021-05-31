@@ -38,7 +38,7 @@ def get_userinfo(login_id):
 def get_login_id_using_uid(uid):
     """
     계정의 uid를 이용해 유저 정보를 얻는 함수
-    정보가 있으면 해당 계정의 로그인 아이디 반환, 없으면 None 반환
+    정보가 있으면 해당 계정의 로그인 아이디 반환, 없으면 빈 배열 반환
 
     uid(int) : 찾고자 하는 계정의 uid 값
     """
@@ -47,7 +47,7 @@ def get_login_id_using_uid(uid):
     
     # 해당 uid의 유저 정보가 없으면 None 반환
     if len(founded_info) == 0:
-        return None
+        return []
 
     # 해당 uid의 유저 정보가 있으면 로그인 아이디 반환
     return founded_info[0]
@@ -136,14 +136,35 @@ def modify_email(login_id, email):
     return True
 
 # 비밀번호 변경(로그인 아이디)
+def modify_unknown_password_using_login_id(login_id, new_pw):
+    """
+    로그인 아이디를 이용해 유저 계정의 잊어버린 비밀번호를 수정하는 함수
+    변경을 성공하면 True, 아니면 False 반환
+
+    login_id(str) : 유저의 로그인 아이디
+    new_pw(str) : 변경할 비밀번호
+    """
+    dir = db.reference('USERINFO').child(str(login_id))
+
+    # 해당 login ID의 유저가 없으면 False 반환
+    if dir.get() is None:
+        print("Invalid user login ID.")
+        return False
+    
+    # 기존의 비밀번호와 일치하면 변경 후 True 반환
+    dir.update({'login_pw':hash_password(new_pw)})
+    print("Password is changed successfully.")
+    return True
+
+# 비밀번호 변경(로그인 아이디)
 def modify_password_using_login_id(login_id, check_pw, new_pw):
     """
     로그인 아이디를 이용해 유저 계정의 비밀번호를 수정하는 함수
     변경을 성공하면 True, 아니면 False 반환
 
     login_id(str) : 유저의 로그인 아이디
-    check_pw(str) : 수정할 비밀번호
-    new_pw(str) : 수정할 비밀번호
+    check_pw(str) : 수정 전 비밀번호
+    new_pw(str) : 변경할 비밀번호
     """
     cur_user = get_userinfo(login_id)
 
