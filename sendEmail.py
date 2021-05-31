@@ -7,12 +7,12 @@ _from, _pw = input('email id와 비밀번호를 입력해주세요.').split()
 global s
 
 def login_out(func):
-    def _login_out():
+    def _login_out(_to):
         global s
         s = smtplib.SMTP('smtp.gmail.com', 587)
         s.starttls()
         s.login(_from, _pw)
-        func()
+        func(_to)
         s.quit()
         s.close()
     return _login_out
