@@ -81,7 +81,7 @@ def signup(data, socket):
     elif res == -2:
         ret = {'action': 'dup nick'}
     elif res == True:
-        email_auth[(data['id'], data['nickname'])] = signup_sendEmail(data)
+        email_auth[(data['id'], data['nickname'])] = signup_sendEmail(data['email'])
         ret = {'action': 'email send'}
     send(ret, socket)
     try:
@@ -204,7 +204,7 @@ def mod_nick(data, socket):
 
 def mod_email(data, socket):
     try:
-        email_auth[data['uid']] = signup_sendEmail(data)
+        email_auth[data['uid']] = signup_sendEmail(data['email'])
         ret = {'action': 'email_send'}
     except:
         ret = {'action': 'err'}
@@ -390,11 +390,11 @@ def get_timestamp():
     t = t.replace('.', '')
     return t
 
-def signup_sendEmail(data):
-    return signup_send_mail(data['email'])
+def signup_sendEmail(email):
+    return signup_send_mail(email)
 
-def modify_pw_sendEmail(data):
-    return modify_pw_send_mail(data['email'])
+def modify_pw_sendEmail(email):
+    return modify_pw_send_mail(email)
 
 
     """'profile_img_request_size': profile_img_request_size,
