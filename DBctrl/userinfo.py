@@ -55,7 +55,7 @@ def get_login_id_using_uid(uid):
 def get_login_id_using_email(email):
     """
     가입할 때 입력한 이메일 주소로 계정 로그인 아이디를 찾는 함수
-    정보가 있으면 해당 계정의 로그인 아이디 반환, 없으면 None 반환
+    정보가 있으면 해당 계정의 로그인 아이디 반환, 없으면 빈 배열 반환
 
     email(str) : 찾고자 하는 계정의 이메일 주소 정보 
     """
@@ -98,7 +98,7 @@ def make_userinfo(login_id, login_pw, email, nickname):
         tmp_id = tmp_id + '0'
         uid = make_uid(str(tmp_id))
 
-        if get_login_id_using_uid(int(uid)) is None:
+        if len(get_login_id_using_uid(int(uid))) == 0:
             break
     
     # password 해시화
