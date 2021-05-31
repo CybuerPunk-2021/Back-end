@@ -81,7 +81,6 @@ def add_item(category, item_name, scale):
     # 아이템의 id 값을 결정하기 위한 번호 트랜잭션 작업
     while True:
         new_item_num = increase_iid_num(category)
-        print(new_item_num)
         if new_item_num is not False:
             break
     
