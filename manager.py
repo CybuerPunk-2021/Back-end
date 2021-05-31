@@ -362,8 +362,8 @@ def get_timestamp():
 
 
 manage_list = {
-    ''''profile_img_request_size': profile_img_request_size,
-    'profile_img_update_size': profile_img_update_size,'''
+    """'profile_img_request_size': profile_img_request_size,
+    'profile_img_update_size': profile_img_update_size,"""
     'signup': signup,
     'login': login,
     'home': get_home,
