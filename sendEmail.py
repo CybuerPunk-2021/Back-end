@@ -33,7 +33,7 @@ def modify_pw_send_mail(_to):
     global s
     lst = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     res = ""
-    for _ in range(15):
+    for _ in range(8):
         res += choice(lst)
     
     msg = MIMEText("변경된 비밀번호는: " + res + "입니다.")
