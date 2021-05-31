@@ -195,7 +195,7 @@ def del_follow(data, socket):
 
 def mod_nick(data, socket):
     if profile.modify_nickname(data['uid'], data['nickname']):
-        newsfeed.mod_nick(data['uid'], data['nickname'])
+        newsfeed.modify_nickname_in_newsfeed(data['uid'], data['nickname'])
         ret = {'action': 'nickname_ok'}
     else:
         ret = {'action': 'dup nick'}
@@ -297,7 +297,7 @@ def save_snapshot(data, socket):
     if not res:
         ret = {'action': 'err'}
     else:
-        newsfeed.add_snap(data['uid'], res)
+        newsfeed.add_snapshot(data['uid'], res)
         ret = {'action': 'ok', 'timestamp': res}
     send(ret, socket)
 

@@ -20,8 +20,8 @@ from .follow import get_user_following_uid_list
 # timestamp로 정렬해서 앞에서부터 짤라서 주기
 
 def make_newsfeed(uid, nickname):
-    dir = db.reference('NEWSFEED')
-    dir.update({uid: {'nickname': nickname}})
+    dir = db.reference('NEWSFEED').child(str(uid))
+    dir.update({'nickname': nickname})
 
 def get_all_newsfeed():
     return db.reference('NEWSFEED').get()
