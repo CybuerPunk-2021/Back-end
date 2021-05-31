@@ -21,6 +21,7 @@ def manage(data, sck, addr):
     except Exception as e:
         send({'action': 'wrong msg format'}, socket)
         traceback.print_exc()
+        log.add_error_log(get_timestamp(), {'content': data, 'error_type': print(e)}, addr)
     return
 '''
 def profile_img_request_size(data, socket):
@@ -110,10 +111,9 @@ def signup(data, socket):
     except ConnectionResetError:
         del(email_auth[(data['id']), data['nickname']])
         raise ConnectionResetError()
-    except:
-        send({'action': 'wrong format'}, socket)
-        traceback.print_exc()
+    except Exception as e:
         del(email_auth[(data['id']), data['nickname']])
+        raise e
         return
 
 def login(data, socket):
@@ -234,9 +234,9 @@ def mod_email(data, socket):
     except ConnectionResetError:
         del(email_auth[data['uid']])
         raise ConnectionResetError()
-    except:
-        send({'action': 'wrong format'}, socket)
+    except Exception as e:
         del(email_auth[data['uid']])
+        raise e
     
 
 
