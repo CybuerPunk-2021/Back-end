@@ -75,12 +75,15 @@ def signup(data, socket):
     for ea in email_auth.keys():
         if data['id'] == ea[0] or data['nickname'] == ea[1]:
             res = -1
-            break
 
     if res == -1:
         ret = {'action':'dup id'}
+        send(ret, socket)
+        return
     elif res == -2:
         ret = {'action': 'dup nick'}
+        send(ret, socket)
+        return
     elif res == True:
         email_auth[(data['id'], data['nickname'])] = signup_sendEmail(data['email'])
         ret = {'action': 'email send'}
@@ -114,7 +117,6 @@ def signup(data, socket):
     except Exception as e:
         del(email_auth[(data['id']), data['nickname']])
         raise e
-        return
 
 def login(data, socket):
     id = data['id']
