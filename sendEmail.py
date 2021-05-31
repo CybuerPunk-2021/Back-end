@@ -12,9 +12,10 @@ def login_out(func):
         s = smtplib.SMTP('smtp.gmail.com', 587)
         s.starttls()
         s.login(_from, _pw)
-        func(_to)
+        ret = func(_to)
         s.quit()
         s.close()
+        return ret
     return _login_out
         
 @login_out

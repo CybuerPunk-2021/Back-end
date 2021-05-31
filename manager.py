@@ -90,6 +90,7 @@ def signup(data, socket):
             auth = auth.decode()
             auth = auth.replace("'", "\"")
             auth = json.loads(auth)
+            print(str(auth)) # log
             if auth['action'] == 'email auth':
                 if email_auth[(data['id'], data['nickname'])] == auth['auth']:
                     uid = userinfo.make_userinfo(data['id'], data['pw'], data['email'], data['nickname'])
@@ -214,6 +215,7 @@ def mod_email(data, socket):
             auth = socket[0].recv(1024)
             auth = auth.decode()
             auth = auth.replace("'", "\"")
+            auth = json.loads(auth)
             auth = json.loads(auth)
             if auth['action'] == 'email auth':
                 if email_auth[data['uid']] == auth['auth']:
