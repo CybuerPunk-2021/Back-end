@@ -15,5 +15,3 @@ def send_mail(_to, _msg):
     s.sendmail(_from, _to, msg.as_string())
     s.quit()
     s.close()
-
-send_mail("hajuu96123@naver.com", "hi")
