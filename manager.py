@@ -17,11 +17,13 @@ def manage(data, sck, addr):
             send({'action': 'wrong action format'}, socket)
             return
         manage_list[act](data, socket)
+    except ConnectionResetError:
+        raise ConnectionResetError()
     except Exception as e:
         send({'action': 'wrong msg format'}, socket)
         traceback.print_exc()
     return
-
+'''
 def profile_img_request_size(data, socket):
     uid = data['uid']
     path = '../data/img/profile/' + str(data['uid'])
@@ -66,7 +68,7 @@ def profile_img_update_size(data, socket):
         traceback.print_exc()
         ret = {'action': 'profile_img_update', 'type': 'False'}
     send(ret, socket)
-
+'''
 def signup(data, socket):
     res = userinfo.check_id_nickname_dup(data['id'], data['nickname'])
 
@@ -105,7 +107,10 @@ def signup(data, socket):
                 send({'action': 'wrong action'}, socket)
                 del(email_auth[(data['id']), data['nickname']])
                 break
-    except Exception as e:
+    except ConnectionResetError:
+        del(email_auth[(data['id']), data['nickname']])
+        raise ConnectionResetError()
+    except:
         send({'action': 'wrong format'}, socket)
         traceback.print_exc()
         del(email_auth[(data['id']), data['nickname']])
@@ -229,6 +234,9 @@ def mod_email(data, socket):
                 send({'action': 'wrong action'}, socket)
                 del(email_auth[data['uid']])
                 break
+    except ConnectionResetError:
+        del(email_auth[data['uid']])
+        raise ConnectionResetError()
     except:
         send({'action': 'wrong format'}, socket)
         del(email_auth[data['uid']])
@@ -354,8 +362,8 @@ def get_timestamp():
 
 
 manage_list = {
-    'profile_img_request_size': profile_img_request_size,
-    'profile_img_update_size': profile_img_update_size,
+    ''''profile_img_request_size': profile_img_request_size,
+    'profile_img_update_size': profile_img_update_size,'''
     'signup': signup,
     'login': login,
     'home': get_home,
