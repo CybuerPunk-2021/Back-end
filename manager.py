@@ -1,7 +1,6 @@
 from datetime import datetime
 from DBctrl import *
-from random import randint
-from sendEmail import send_mail
+from sendEmail import signup_send_mail, modify_pw_send_mail
 import json
 import os.path
 import traceback
@@ -82,7 +81,7 @@ def signup(data, socket):
     elif res == -2:
         ret = {'action': 'dup nick'}
     elif res == True:
-        email_auth[(data['id'], data['nickname'])] = sendEmail(data)
+        email_auth[(data['id'], data['nickname'])] = signup_sendEmail(data)
         ret = {'action': 'email send'}
     send(ret, socket)
     try:
@@ -116,11 +115,6 @@ def signup(data, socket):
         del(email_auth[(data['id']), data['nickname']])
         return
 
-def sendEmail(data):
-    auth = randint(100000, 999999)
-    send_mail(data['email'], str(auth))
-    return auth
-
 def login(data, socket):
     id = data['id']
     pw = data['pw']
@@ -132,9 +126,10 @@ def login(data, socket):
     send(ret, socket)
 
 def get_home(data, socket):
+    refresh_num = 4
     res = newsfeed.get_newsfeed_uid(data['uid'])
     if res:
-        res = res[data['count'] * 2: (data['count'] + 1) * 2]
+        res = res[data['count'] * refresh_num: (data['count'] + 1) * refresh_num]
         for snap in res:
             snap['snapshot_intro'] = snapshot.get_snapshot_intro(snap['uid'], snap['timestamp'])
             snap['like'] = str(snapshot.is_user_like_snapshot(data['uid'], snap['uid'], snap['timestamp']))
@@ -208,7 +203,7 @@ def mod_nick(data, socket):
 
 def mod_email(data, socket):
     try:
-        email_auth[data['uid']] = sendEmail(data)
+        email_auth[data['uid']] = signup_sendEmail(data)
         ret = {'action': 'email_send'}
     except:
         ret = {'action': 'err'}
@@ -310,11 +305,12 @@ def save_snapshot(data, socket):
     send(ret, socket)
 
 def visit_book_request(data, socket):
+    refresh_num = 5
     if data['type'] == 'comment':
         res = visitbook.get_comment_list(data['uid'])
     elif data['type'] == 'reply':
         res = visitbook.get_comment_reply_list(data['uid'], data['cid'])
-    res = res[int(data['count']) * 5:(int(data['count']) + 1) * 5 ]
+    res = res[int(data['count']) * refresh_num:(int(data['count']) + 1) * refresh_num]
     for r in res:
         r['nickname'] = profile.get_profile_nickname(r['writer_uid'])
     ret = {'action': 'visit_book_request'}
@@ -342,7 +338,37 @@ def search(data, socket):
     query = profile.search_profile(data['query'])
     res = {'action': 'search', 'result': query}
     send(res, socket)
-    
+
+def snapshot_album(data, socket):
+    album = snapshot.get_user_snapshot(data['uid'])
+    res = []
+    for _snap in album:
+        snap = {'timestamp': _snap}
+        snap['snapshot_intro'] = album[_snap]['snapshot_intro']
+        if 'like_user' in album[_snap]:
+            snap['like_num'] = len(album[_snap]['like_user'])
+        else:
+            snap['like_num'] = 0
+        res.insert(0, snap)
+
+    ret = {'action': 'snapshot_album', 'snapshot': res}
+    send(ret, socket)
+
+def find_id(data, socket):
+    res = userinfo.get_login_id_using_email(data['email'])
+    ret = {'action': 'find_id', 'result': res}
+    send(ret, socket)
+
+def modify_pw(data, socket):
+    res = userinfo.get_login_id_using_email(data['email'])
+    ret = {'action': 'moodify_pw'}
+    if data['id'] in res:
+        pw = modify_pw_sendEmail(data['email'])
+        # modify DB pw
+        ret['result'] = 'ok'
+    else:
+        ret['result'] = 'err'
+    send(ret, socket)
     
 
 def send(msg, socket):
@@ -359,6 +385,12 @@ def get_timestamp():
     t = t.replace(' ', '')
     t = t.replace('.', '')
     return t
+
+def signup_sendEmail(data):
+    return signup_send_mail(data['email'])
+
+def modify_pw_sendEmail(data):
+    return modify_pw_send_mail(data['email'])
 
 
     """'profile_img_request_size': profile_img_request_size,
@@ -384,5 +416,8 @@ manage_list = {
     'snapshot_save': save_snapshot,
     'visit_book_request': visit_book_request,
     'visit_book_write': visit_book_write,
-    'search': search
+    'search': search,
+    'snapshot_album': snapshot_album,
+    'find_id': find_id,
+    'modify_pw': modify_pw
 }
