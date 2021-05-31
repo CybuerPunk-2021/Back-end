@@ -21,7 +21,7 @@ def manage(data, sck, addr):
     except Exception as e:
         send({'action': 'wrong msg format'}, socket)
         traceback.print_exc()
-        log.add_error_log(get_timestamp(), {'content': data, 'error_type': print(e)}, addr)
+        log.add_error_log(get_timestamp(), {'content': data, 'error_type': str(type(e)) + " : " + str(e)}, addr)
     return
 '''
 def profile_img_request_size(data, socket):
