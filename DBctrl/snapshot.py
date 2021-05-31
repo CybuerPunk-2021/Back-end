@@ -361,7 +361,6 @@ def save_snapshot(uid, timestamp, room_snapshot):
     room_snapshot(SnapshotObj) : 스냅샷 정보 Snapshot 인스턴스
     """
     # parameter의 room_snapshot의 타입이 SnapshotObj이 아닐 경우 중지, False 반환
-    dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
     if type(room_snapshot) != SnapshotObj:
         print("Invalid type of snapshot data. Put SnapshotObj type.")
         return False
@@ -431,7 +430,7 @@ def like_snapshot(uid, like_uid, timestamp):
     # 스냅샷에 이미 좋아요 수가 1 이상인 경우
     # 이미 해당 유저가 좋아요 표시를 남겼다면 작업 취소
     if like_uid in user_list:
-        print(str(like_uid) + " user already likes " + str(uid) + "`s " +  str(timestamp) + " snapshot.")
+        print(str(like_uid) + " user already likes " + str(uid) + "'s " +  str(timestamp) + " snapshot.")
         return False
 
     # 좋아요 표시를 안 남겼다면 작업 진행
@@ -460,14 +459,14 @@ def unlike_snapshot(uid, unlike_uid, timestamp):
     user_list = dir.child('like_user').get()
     # 해당 스냅샷을 아무도 좋아요 표시를 남기지 않았다면 작업 취소
     if user_list is None:
-        print("The user who likes "+ str(uid) + "`s " +  str(timestamp) + " snapshot doesn't exist.")
+        print("The user who likes "+ str(uid) + "'s " +  str(timestamp) + " snapshot doesn't exist.")
         return False
 
     # 좋아요 표시를 남겼다면 작업 진행
     if unlike_uid in user_list:
         user_list.remove(unlike_uid)
         dir.update({'like_user':user_list})
-        print(str(unlike_uid) + " unlikes " + str(uid) + "`s " +  str(timestamp) + " snapshot.")
+        print(str(unlike_uid) + " unlikes " + str(uid) + "'s " +  str(timestamp) + " snapshot.")
         return True
     
     # 해당 유저가 좋아요 표시를 남기지 않았다면 작업 취소
