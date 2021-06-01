@@ -412,6 +412,7 @@ def chk_bg_img(data, socket):
 def backup_log(data, socket):
     log_path = getcwd() + "/../data/log/" + get_timestamp()
     log.save_log(log_path)
+    log.delete_all_log()
     send("OK", socket)
 
 
