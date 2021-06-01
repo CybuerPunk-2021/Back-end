@@ -1,4 +1,5 @@
 from firebase_admin import db
+from datetime import date, timedelta
 
 from .follow import get_user_following_uid_list
 
@@ -69,16 +70,17 @@ def mod_nick(uid, nickname):
     else:
         return False
 
-def chk_newsfeed(day):
+def remove_old_newsfeed():
     dir = db.reference('NEWSFEED')
-    all_uid = dir.get()
-    for uid in all_uid:
-        i = 0
-        for timestamp in all_uid['uid']['snapshot']:
-            if timestamp[0:8] not in day:
-                i = i + 1
-            else:
-                break
-        all_uid['uid']['snapshot'] = all_uid['uid']['snapshot'][0:i]
-
-    dir.update(all_uid)
+    all_news = dir.get()
+    last_day = (date.today() - timedelta(6)).strftime('%Y%m%d')
+    for uid in all_news:
+        if not 'snapshot' in all_news[uid]:
+            continue
+        cnt = 0
+        for i in range(len(all_news[uid]['snapshot'])):
+            if all_news[uid]['snapshot'][i][:8] < last_day:
+                cnt = cnt + 1
+        all_news[uid]['snapshot'] = all_news[uid]['snapshot'][cnt:]
+        _dir = dir.child(uid)
+        _dir.update({'snapshot': all_news[uid]['snapshot']})
