@@ -369,11 +369,11 @@ def find_id(data, socket):
     ret = {'action': 'find_id', 'result': res}
     send(ret, socket)
 
-def modify_pw(data, socket):
+def find_pw(data, socket):
     res = userinfo.get_login_id_using_email(data['email'])
-    ret = {'action': 'moodify_pw'}
+    ret = {'action': 'find_pw'}
     if data['id'] in res:
-        pw = modify_pw_sendEmail(data['email'])
+        pw = find_pw_sendEmail(data['email'])
         if userinfo.modify_unknown_password_using_login_id(data['id'], pw):
             ret['result'] = 'ok'
         else:
@@ -401,7 +401,7 @@ def get_timestamp():
 def signup_sendEmail(email):
     return signup_send_mail(email)
 
-def modify_pw_sendEmail(email):
+def find_pw_sendEmail(email):
     return modify_pw_send_mail(email)
 
 
@@ -431,5 +431,5 @@ manage_list = {
     'search': search,
     'snapshot_album': snapshot_album,
     'find_id': find_id,
-    'modify_pw': modify_pw
+    'find_pw': find_pw
 }
