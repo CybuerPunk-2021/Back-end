@@ -145,9 +145,7 @@ def make_profile(uid, login_id, nickname, timestamp):
         'nickname_upper': str(nickname).upper(),
         'introduction': 'Hello',
         'num_follower': 0,
-        'num_following': 0,
-        'profile_image_time': timestamp,
-        'bg_image_time': timestamp,
+        'num_following': 0
     })
     print("Setting " + login_id + " account's profile success.")
     return True
