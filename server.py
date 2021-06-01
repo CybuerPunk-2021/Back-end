@@ -1,18 +1,16 @@
-from socket import socket
-from socket import AF_INET
-from socket import SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
 from manager import manage
 import json
 import firebase_admin
-from firebase_admin import credentials
-
-from flask import Flask
+from datetime import datetime
+from time import sleep
+from DBctrl.newsfeed import remove_old_newsfeed
 
 buf_size = 1024 # read buffer size
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("../key/key.json")
+    cred = firebase_admin.credentials.Certificate("../key/key.json")
     firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
 
 class c_sck(Thread): # client socket thread object
@@ -52,6 +50,12 @@ def create_thread(s_sck): # create new c_sck thread
     c_sck_lst[-1].daemon = True # set daemon
     c_sck_lst[-1].start() # start
 
+def chk_newsfeed():
+    while True:
+        if datetime.now().strftime("%H%M") == "0000":
+            remove_old_newsfeed()
+        sleep(40)
+
 c_sck_lst = [] # initialize client socket list
 s_sck = socket(AF_INET, SOCK_STREAM) # initialize server socket
 host = '0.0.0.0' # set host
@@ -60,6 +64,10 @@ max_listen = 100 # set maximum listen size
 s_sck.bind((host, port)) # bind
 s_sck.listen(max_listen) # listen
 create_thread(s_sck) # create new c_sck thread
+
+_chk_newsfeed = Thread(target = chk_newsfeed)
+_chk_newsfeed.daemon = True
+_chk_newsfeed.start()
 
 while True: # repeat
     inp = input() # input data
