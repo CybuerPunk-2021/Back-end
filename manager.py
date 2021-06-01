@@ -381,7 +381,30 @@ def find_pw(data, socket):
     else:
         ret['result'] = 'err'
     send(ret, socket)
-    
+
+def chg_profile_img(data, socket):
+    ts = get_timestamp()
+    profile.modify_profile_image_time(data['uid'], ts)
+    ret = {'action': 'chg_profile_img', 'timestamp': ts}
+
+def chk_profile_img(data, socket):
+    ts = profile.get_profile_image_time(data['uid'])
+    if not ts:
+        ts = ""
+    ret = {'action': 'chk_profile_img', 'timestamp': ts}
+    send(ret, socket)
+
+def chg_bg_img(data, socket):
+    ts = get_timestamp()
+    profile.modify_background_image_time(data['uid'], ts)
+    ret = {'action': 'chg_bg_img', 'timestamp': ts}
+
+def chk_bg_img(data, socket):
+    ts = profile.get_background_image_time(data['uid'])
+    if not ts:
+        ts = ""
+    ret = {'action': 'chk_bg_img', 'timestamp': ts}
+    send(ret, socket)
 
 def send(msg, socket):
     log.add_log(get_timestamp(), {'type': 'send', 'content': msg}, socket[1])
@@ -431,5 +454,9 @@ manage_list = {
     'search': search,
     'snapshot_album': snapshot_album,
     'find_id': find_id,
-    'find_pw': find_pw
+    'find_pw': find_pw,
+    'chg_profile_img': chg_profile_img,
+    'chk_profile_img': chk_profile_img,
+    'chg_bg_img': chg_bg_img,
+    'chk_bg_img': chk_bg_img
 }
