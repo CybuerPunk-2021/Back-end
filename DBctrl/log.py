@@ -48,3 +48,9 @@ def delete_log(timestamp):
 def delete_all_log():
     dir = db.reference('LOG')
     dir.delete()
+
+def save_log(path):
+    f = open(path, 'w')
+    log = get_all_log()
+    f.write(str(log))
+    f.close()

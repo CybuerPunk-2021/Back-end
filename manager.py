@@ -3,6 +3,7 @@ from DBctrl import *
 from sendEmail import signup_send_mail, modify_pw_send_mail
 import json
 import os.path
+from os import getcwd
 import traceback
 
 email_auth = {}
@@ -408,6 +409,11 @@ def chk_bg_img(data, socket):
     ret = {'action': 'chk_bg_img', 'timestamp': ts}
     send(ret, socket)
 
+def backup_log(data, socket):
+    log_path = getcwd() + "../data/" + get_timestamp()
+    save_log(log_path)
+    send("OK", socket)
+
 def send(msg, socket):
     log.add_log(get_timestamp(), {'type': 'send', 'content': msg}, socket[1])
     msg = str(msg)
@@ -460,5 +466,6 @@ manage_list = {
     'chg_profile_img': chg_profile_img,
     'chk_profile_img': chk_profile_img,
     'chg_bg_img': chg_bg_img,
-    'chk_bg_img': chk_bg_img
+    'chk_bg_img': chk_bg_img,
+    'backup_log': backup_log
 }
