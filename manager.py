@@ -135,7 +135,6 @@ def get_home(data, socket):
         res = res[data['count'] * refresh_num: (data['count'] + 1) * refresh_num]
         for snap in res:
             _snap = snapshot.get_snapshot(snap['uid'], snap['timestamp'])
-            print(_snap)
             snap['snapshot_intro'] = _snap['snapshot_intro']
             if 'like_user' in _snap:
                 snap['like'] = str(data['uid'] in _snap['like_user'])
