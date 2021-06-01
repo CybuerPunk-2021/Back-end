@@ -386,6 +386,7 @@ def chg_profile_img(data, socket):
     ts = get_timestamp()
     profile.modify_profile_image_time(data['uid'], ts)
     ret = {'action': 'chg_profile_img', 'timestamp': ts}
+    send(ret, socket)
 
 def chk_profile_img(data, socket):
     ts = profile.get_profile_image_time(data['uid'])
@@ -398,6 +399,7 @@ def chg_bg_img(data, socket):
     ts = get_timestamp()
     profile.modify_background_image_time(data['uid'], ts)
     ret = {'action': 'chg_bg_img', 'timestamp': ts}
+    send(ret, socket)
 
 def chk_bg_img(data, socket):
     ts = profile.get_background_image_time(data['uid'])
