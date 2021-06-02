@@ -349,7 +349,7 @@ def visit_book_write(data, socket):
     send(ret, socket)
 
 def search(data, socket):
-    query = profile.search_profile(data['query'])
+    query = profile.search_profile(data['query'], data['uid'])
     res = {'action': 'search', 'result': query}
     send(res, socket)
 
