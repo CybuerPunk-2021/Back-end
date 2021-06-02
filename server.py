@@ -9,9 +9,9 @@ from DBctrl.newsfeed import remove_old_newsfeed
 
 buf_size = 1024 # read buffer size
 
-if not firebase_admin._apps:
-    cred = firebase_admin.credentials.Certificate("../key/key.json")
-    firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
+if not firebase_admin._apps: # if firebase_admin not setted
+    cred = firebase_admin.credentials.Certificate("../key/key.json") # find key file and make Certificate
+    firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'}) # make credentials
 
 class c_sck(Thread): # client socket thread object
     def __init__(self, socket, lst): # init method
@@ -21,7 +21,7 @@ class c_sck(Thread): # client socket thread object
 
     def run(self): # when thread is started
         self.c_socket, self.addr = self.s_sck.accept() # accept
-        print('aceepted')
+        print('aceepted') # print
         create_thread(self.s_sck) # create new thread to accept client
         tmp_thread = Thread(target = self.c_recv) # thread for receive msg
         tmp_thread.daemon = True # set damon
@@ -33,10 +33,10 @@ class c_sck(Thread): # client socket thread object
             try: # while connection is alive
                 get_data = self.c_socket.recv(buf_size) # receive data
                 data = get_data.decode() # decode data
-                data = data.replace("'", "\"")
+                data = data.replace("'", "\"") # replace single quote to double
                 print(str(data)) # log
                 data = json.loads(data) # convert data to json(dict)
-                manage(data, self.c_socket, self.addr[0])
+                manage(data, self.c_socket, self.addr[0]) # manage
             except ConnectionResetError: # when connection is die
                 self.c_socket.close() # close socket
                 self.lst.remove(self) # remove self from client list
@@ -50,11 +50,11 @@ def create_thread(s_sck): # create new c_sck thread
     c_sck_lst[-1].daemon = True # set daemon
     c_sck_lst[-1].start() # start
 
-def chk_newsfeed():
-    while True:
-        if datetime.now().strftime("%H%M") == "0000":
-            remove_old_newsfeed()
-        sleep(40)
+def chk_newsfeed(): # remove old newsfeed at 00:00
+    while True: # repeat
+        if datetime.now().strftime("%H%M") == "0000": # chk time
+            remove_old_newsfeed() # remove old newsfeed
+        sleep(40) # wait 40s
 
 c_sck_lst = [] # initialize client socket list
 s_sck = socket(AF_INET, SOCK_STREAM) # initialize server socket
@@ -65,9 +65,9 @@ s_sck.bind((host, port)) # bind
 s_sck.listen(max_listen) # listen
 create_thread(s_sck) # create new c_sck thread
 
-_chk_newsfeed = Thread(target = chk_newsfeed)
-_chk_newsfeed.daemon = True
-_chk_newsfeed.start()
+_chk_newsfeed = Thread(target = chk_newsfeed) # make Thread
+_chk_newsfeed.daemon = True # set daemon
+_chk_newsfeed.start() # start Thread
 
 while True: # repeat
     inp = input() # input data
