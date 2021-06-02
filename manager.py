@@ -6,13 +6,13 @@ import os.path
 from os import getcwd
 import traceback
 
-email_auth = {}
+email_auth = {} # dict to save signup data
 
-def manage(data, sck, addr):
-    socket = (sck, addr)
-    log.add_log(get_timestamp(), {'type': 'receive', 'content': data}, addr)
+def manage(data, sck, addr): # manage function
+    socket = (sck, addr) # make tuple to save socket data
+    log.add_log(get_timestamp(), {'type': 'receive', 'content': data}, addr) # write log
     try:
-        act = data['action']
+        act = data['action'] # 
         if act not in manage_list:
             send({'action': 'wrong action format'}, socket)
             return
@@ -123,7 +123,7 @@ def login(data, socket):
     id = data['id']
     pw = data['pw']
     res = userinfo.login(id, pw)
-    if res == False:
+    if not res:
         ret = {'action': 'False'}
     else:
         ret = {'action':'True', 'nickname': res[0], 'uid': int(res[1])}
@@ -151,56 +151,52 @@ def get_home(data, socket):
 
 def profile_info(data, socket):
     res = profile.get_profile(data['uid'])
-    if res == None:
-        send({'action': 'None'}, socket)
+    if not res:
+        send({'action': 'profile_info', 'follower': 0, 'self_intro': "", 'snapshot_info': {}}, socket)
     else:
         ret = {'action': 'profile_info', 'follower': res['num_follower'], 'self_intro': res['introduction']}
         if 'snapshot_info' in res:
             ret['snapshot_info'] = res['snapshot_info']        
         else:
             ret['snapshot_info'] = {}
-    send(ret, socket)
+        send(ret, socket)
 
 def get_follower(data, socket):
     res = follow.get_user_follower_uid_list(data['uid'])
     result = []
-    for r in res:
-        tmp = {'uid': r}
-        tmp['nickname'] = profile.get_profile_nickname(r)
-        result.append(tmp)
 
     if res:
+        for r in res:
+            tmp = {'uid': r}
+            tmp['nickname'] = profile.get_profile_nickname(r)
+            result.append(tmp)
         ret = {'action': 'follower', 'follower': result}
     else:
-        ret = {'action': 'follower err'}
+        ret = {'action': 'follower', 'follower': []}
     send(ret, socket)
 
 def get_following(data, socket):
     res = follow.get_user_following_uid_list(data['uid'])
     result = []
-    for r in res:
-        tmp = {'uid': r}
-        tmp['nickname'] = profile.get_profile_nickname(r)
-        result.append(tmp)
 
     if res:
+        for r in res:
+            tmp = {'uid': r}
+            tmp['nickname'] = profile.get_profile_nickname(r)
+            result.append(tmp)
         ret = {'action': 'following', 'following': result}
     else:
-        ret = {'action': 'following err'}
+        ret = {'action': 'following', 'following': []}
     send(ret, socket)
 
 def add_follow(data, socket):
-    if follow.follow_user(data['from_uid'], data['to_uid'], get_timestamp()):
-        ret = {'action': 'OK'}
-    else:
-        ret = {'action': 'ALREADY'}
+    follow.follow_user(data['from_uid'], data['to_uid'], get_timestamp())
+    ret = {'action': 'OK'}
     send(ret, socket)
     
 def del_follow(data, socket):
-    if follow.unfollow_user(data['from_uid'], data['to_uid']):
-        ret = {'action': 'OK'}
-    else:
-        ret = {'action': 'ALREADY'}
+    follow.unfollow_user(data['from_uid'], data['to_uid'])
+    ret = {'action': 'OK'}
     send(ret, socket)
 
 def mod_nick(data, socket):
@@ -297,7 +293,7 @@ def get_snapshot_item_list(data, socket):
     if res:
         ret = {'action': 'snapshot_roominfo', 'item_list': res}
     else:
-        ret = {'action': 'err'}
+        ret = {'action': 'snapshot_roominfo', 'item_list': []}
     send(ret, socket)
 
 def save_snapshot(data, socket):
@@ -306,8 +302,7 @@ def save_snapshot(data, socket):
         _item = snapshot.ItemObj('desk', item['iid'], item['position'], item['scale'], item['rotation'])
         snap.put_item(_item)
     res = snapshot.save_snapshot(data['uid'], get_timestamp(), snap)
-    #print(res)
-
+    
     if not res:
         ret = {'action': 'err'}
     else:
@@ -316,11 +311,15 @@ def save_snapshot(data, socket):
     send(ret, socket)
 
 def visit_book_request(data, socket):
+    #if data['type'] == 'comment':
+    res = visitbook.get_comment_list(data['uid'])
+    #elif data['type'] == 'reply':
+        #res = visitbook.get_comment_reply_list(data['uid'], data['cid'])
+    if not res:
+        send({'action': 'visit_book_request', 'visit_book': []}, socket)
+        return
+
     refresh_num = 5
-    if data['type'] == 'comment':
-        res = visitbook.get_comment_list(data['uid'])
-    elif data['type'] == 'reply':
-        res = visitbook.get_comment_reply_list(data['uid'], data['cid'])
     res = res[int(data['count']) * refresh_num:(int(data['count']) + 1) * refresh_num]
     for r in res:
         r['nickname'] = profile.get_profile_nickname(r['writer_uid'])
@@ -353,6 +352,10 @@ def search(data, socket):
 def snapshot_album(data, socket):
     album = snapshot.get_user_snapshot(data['uid'])
     res = []
+    if not album:
+        send({'action': 'snapshot_album', 'snapshot': []}, socket)
+        return
+
     for _snap in album:
         snap = {'timestamp': _snap}
         snap['snapshot_intro'] = album[_snap]['snapshot_intro']
