@@ -178,6 +178,16 @@ def delete_user_in_follower_list(list_host_uid, list_delete_uid):
     decrease_follower_num(list_host_uid)
     return True
 
+def is_following(from_uid, to_uid):
+    """
+    from user가 to user를 팔로잉하고 있는지 알려주는 함수
+
+    from_uid(int) : 팔로우 상태를 알고자 하는 유저의 uid
+    to_uid(int) : 팔로우하고 있는지 알기 위한 유저의 uid
+    """
+    dir = db.reference('FOLLOW').child(str(from_uid)).child('following').child(str(to_uid))
+    return dir.get() is not None
+
 # 팔로우
 def follow_user(from_uid, to_uid, timestamp):
     """
