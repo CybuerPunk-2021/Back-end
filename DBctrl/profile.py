@@ -1,4 +1,5 @@
 from firebase_admin import db
+from follow import is_following
 
 # PROFILE 데이터베이스 구조
 """
@@ -110,7 +111,7 @@ def get_follower_num(uid):
     return db.reference('PROFILE').child(str(uid)).child('num_follower').get() or 0
 
 # 프로필 검색
-def search_profile(nickname):
+def search_profile(nickname, from_uid):
     """
     해당 문자열을 포함하는 닉네임을 가진 유저를 검색하는 함수
     검색한 유저의 uid, 닉네임 정보 리스트를 반환한다.
@@ -126,7 +127,7 @@ def search_profile(nickname):
     return_list = []
     if len(search_data) > 0:
         for uid, data in search_data.items():
-            return_list.append({'uid': uid, 'nickname': data['nickname']})
+            return_list.append({'uid': uid, 'nickname': data['nickname'], 'isfollow': is_following(from_uid, uid)})
 
     return return_list
 
