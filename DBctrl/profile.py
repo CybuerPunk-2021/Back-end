@@ -117,9 +117,13 @@ def search_profile(nickname):
 
     nickname(str) : 닉네임 검색 키워드
     """
-    search_data = db.reference('PROFILE').order_by_child('nickname_upper').start_at(str(nickname.upper())).end_at(str(nickname.upper()) + '\uf8ff').get()
-    return_list = []
+    # 검색 키워드가 아무 값도 없는 경우라면 그대로 넘어감
+    if nickname is "":
+        return []
     
+    search_data = db.reference('PROFILE').order_by_child('nickname_upper').start_at(str(nickname.upper())).end_at(str(nickname.upper()) + '\uf8ff').get()
+    
+    return_list = []
     if len(search_data) > 0:
         for uid, data in search_data.items():
             return_list.append({'uid': uid, 'nickname': data['nickname']})
