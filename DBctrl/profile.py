@@ -1,5 +1,5 @@
 from firebase_admin import db
-from follow import is_following
+from .follow import is_following
 
 # PROFILE 데이터베이스 구조
 """
