@@ -361,7 +361,8 @@ def snapshot_album(data, socket):
         return
 
     refresh_num = 4
-    _album = list(album.keys())[int(data['count']) * refresh_num:(int(data['count']) + 1) * refresh_num]
+    _album = list(album.keys()).reverse()
+    _album = _album[int(data['count']) * refresh_num:(int(data['count']) + 1) * refresh_num]
     for _snap in _album:
         snap = {'timestamp': _snap}
         snap['snapshot_intro'] = album[_snap]['snapshot_intro']
@@ -369,7 +370,7 @@ def snapshot_album(data, socket):
             snap['like_num'] = len(album[_snap]['like_user'])
         else:
             snap['like_num'] = 0
-        res.insert(0, snap)
+        res.append(snap)
 
     ret = {'action': 'snapshot_album', 'snapshot': res}
     send(ret, socket)
