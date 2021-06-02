@@ -127,7 +127,7 @@ def search_profile(nickname, from_uid):
     return_list = []
     if len(search_data) > 0:
         for uid, data in search_data.items():
-            return_list.append({'uid': uid, 'nickname': data['nickname'], 'isfollow': is_following(from_uid, uid)})
+            return_list.append({'uid': uid, 'nickname': data['nickname'], 'isfollow': str(is_following(from_uid, uid))})
 
     return return_list
 
