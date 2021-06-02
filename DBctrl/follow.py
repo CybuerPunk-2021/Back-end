@@ -193,11 +193,25 @@ def follow_user(from_uid, to_uid, timestamp):
     to_uid(int) : 팔로우를 당하는 유저의 uid
     timestamp(str) : 팔로우 관계 형성 시각
     """
+    # 자기 자신을 팔로우하는 경우 False 반환
+    if from_uid == to_uid:
+        return False
+
     # 각 유저의 팔로잉, 팔로워 리스트에 상대방을 추가
-    add_user_in_following_list(from_uid, to_uid, timestamp)
-    add_user_in_follower_list(to_uid, from_uid, timestamp)
+    following_status = add_user_in_following_list(from_uid, to_uid, timestamp)
+    follower_status = add_user_in_follower_list(to_uid, from_uid, timestamp)
     
+    # 팔로잉, 팔로워 목록 중 하나라도 갱신에 오류가 생겼다면 취소, False 반환
+    if (following_status is False) or (follower_status is False):
+        delete_user_in_following_list(from_uid, to_uid)
+        delete_user_in_follower_list(to_uid, from_uid)
+        print("Follow Error")
+        return False
+
+    # 정상적으로 팔로우 과정이 진행됐다면 True 반환
     print("Follow (" + str(from_uid) + " -> " + str(to_uid) + ")")
+    return True
+
 # 언팔로우
 def unfollow_user(from_uid, to_uid):
     """
@@ -218,6 +232,7 @@ def unfollow_user(from_uid, to_uid):
     delete_user_in_follower_list(to_uid, from_uid)
 
     print("Unfollow (" + str(from_uid) + " -> " + str(to_uid) + ")")
+    return True
 
 # 회원탈퇴 시 유저의 팔로우 정보 삭제
 def delete_user_follow_info(uid):
