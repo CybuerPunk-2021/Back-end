@@ -190,13 +190,17 @@ def get_following(data, socket):
     send(ret, socket)
 
 def add_follow(data, socket):
-    follow.follow_user(data['from_uid'], data['to_uid'], get_timestamp())
-    ret = {'action': 'OK'}
+    if follow.follow_user(data['from_uid'], data['to_uid'], get_timestamp()):
+        ret = {'action': 'OK'}
+    else:
+        ret = {'action': 'ALREADY'}
     send(ret, socket)
     
 def del_follow(data, socket):
-    follow.unfollow_user(data['from_uid'], data['to_uid'])
-    ret = {'action': 'OK'}
+    if follow.unfollow_user(data['from_uid'], data['to_uid']):
+        ret = {'action': 'OK'}
+    else:
+        ret = {'action': 'ALREADY'}
     send(ret, socket)
 
 def mod_nick(data, socket):
@@ -356,6 +360,8 @@ def snapshot_album(data, socket):
         send({'action': 'snapshot_album', 'snapshot': []}, socket)
         return
 
+    refresh_num = 4
+    album = album[int(data['count']) * refresh_num:(int(data['count']) + 1) * refresh_num]
     for _snap in album:
         snap = {'timestamp': _snap}
         snap['snapshot_intro'] = album[_snap]['snapshot_intro']
