@@ -361,7 +361,7 @@ def snapshot_album(data, socket):
         return
 
     refresh_num = 4
-    _album = album.keys()[int(data['count']) * refresh_num:(int(data['count']) + 1) * refresh_num]
+    _album = list(album.keys())[int(data['count']) * refresh_num:(int(data['count']) + 1) * refresh_num]
     for _snap in album:
         snap = {'timestamp': _snap}
         snap['snapshot_intro'] = album[_snap]['snapshot_intro']
