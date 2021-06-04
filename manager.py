@@ -272,6 +272,7 @@ def mod_snapdesc(data, socket):
 
 def del_snapshot(data, socket):
     if snapshot.delete_snapshot(data['uid'], data['timestamp']):
+        newsfeed.del_snap(data['uid'], data['timestamp'])
         ret = {'action': 'ok'}
     else:
         ret = {'action': 'err'}

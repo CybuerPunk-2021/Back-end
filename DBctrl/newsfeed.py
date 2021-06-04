@@ -62,6 +62,17 @@ def add_snap(uid, timestamp):
     dir = db.reference('NEWSFEED').child(str(uid))
     dir.update({'snapshot': t})
 
+def del_snap(uid, timestamp):
+    dir = db.reference('NEWSFEED').child(str(uid)).child('snapshot')
+    snap = dir.get()
+    if timestamp in snap:
+        snap.remove(timestamp)
+        dir = db.reference('NEWSFEED').child(str(uid))
+        dir.update({'snapshot': snap})
+        return True
+    else:
+        return False
+
 def mod_nick(uid, nickname):
     dir = db.reference('NEWSFEED').child(str(uid))
     if dir.get() is not None:
