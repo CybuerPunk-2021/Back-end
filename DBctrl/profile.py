@@ -16,12 +16,6 @@ from .follow import is_following
         'num_following': 팔로잉 수,
         'profile_image_time': '가장 최근에 프로필 이미지를 변경한 시각',
         'bg_image_time': '가장 최근에 배경 이미지를 변경한 시각',
-        'snapshot_info':
-        {
-            'snapshot_intro': '스냅샷 코멘트',
-            'like_num': 스냅샷 좋아요 수,
-            'timestamp': '스냅샷 생성 시기',
-        }
     }
 }
 """
@@ -63,13 +57,9 @@ def get_profile(uid):
     uid(int) : 해당 프로필 유저의 uid
     """
     dir = db.reference('PROFILE').child(str(uid))
+    profile_data = dir.get()
 
-    # 해당 uid의 프로필 정보가 없다면 None 반환
-    if dir.get() is None:
-        return None
-    
-    # 정보가 존재하면 프로필 정보 반환
-    return dir.get()
+    return profile_data
 
 # 프로필 닉네임 요청
 def get_profile_nickname(uid):

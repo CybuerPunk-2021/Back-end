@@ -267,13 +267,27 @@ def get_snapshot(uid, timestamp):
         return None
     return dir.get()
 
-def get_user_latest_made_snapshot(uid):
+def get_user_latest_snapshot(uid):
     """
     해당 유저가 제일 최근에 만든 스냅샷 정보를 얻는 함수
 
     uid(int) : 최근 스냅샷 데이터를 얻을 유저의 uid
     """
-    return db.reference('SNAPSHOT').child(str(uid)).order_by_value().limit_to_last(1).get() or {}
+    snapshot_data = db.reference('SNAPSHOT').child(str(uid)).order_by_value().limit_to_last(1).get()
+
+    # 최신 스냅샷 데이터가 없으면 None 출력
+    if snapshot_data is None:
+        return None
+    
+    # 데이터가 있으면 변환 후 반환
+    latest_snapshot = {}
+    for timestamp, value in snapshot_data.items():
+        latest_snapshot['timestamp'] = timestamp
+        if 'item_list' in value:
+            del value['item_list']
+        latest_snapshot.update(value)
+
+    return latest_snapshot
 
 # 스냅샷 아이템 리스트
 def get_snapshot_item(uid, timestamp):
@@ -316,39 +330,6 @@ def is_user_like_snapshot(cur_user_uid, snapshot_creator_uid, timestamp):
     # cur_user가 좋아요를 눌렀는지 True/False 반환
     return cur_user_uid in like_uid_list
 
-def update_profile_snapshot_preview(uid):
-    """
-    프로필 화면에 보여줄 스냅샷 정보를 제일 최근 만든 스냅샷 정보로 교체하는 함수
-
-    uid(str) : 해당 프로필 유저의 uid
-    """
-    dir = db.reference('PROFILE').child(str(uid)).child('snapshot_info')
-    latest_snapshot = get_user_latest_made_snapshot(uid)
-    # 제일 최근 생성한 스냅샷이 없다면 종료
-    if len(latest_snapshot) == 0:
-        dir.delete()
-        return
-
-    data = latest_snapshot.popitem(last=True)
-    timestamp, snapshot_data = data[0], data[1]
-    
-    # 현재 프로필의 최신 스냅샷 정보가 유지되고 있다면 종료
-    if dir.child('timestamp').get() == timestamp:
-        return
-
-    if 'like_uid' in snapshot_data:
-        like_num = len(snapshot_data['like_uid'])
-    else:
-        like_num = 0
-    
-    # 프로필에 이전 스냅샷 정보가 있다면 최신 스냅샷으로 교체
-    dir.set({
-        'snapshot_intro': snapshot_data['snapshot_intro'],
-        'like_num': like_num,
-        'timestamp': timestamp,
-    })
-    return timestamp
-
 # 스냅샷 생성
 def save_snapshot(uid, timestamp, room_snapshot):
     """
@@ -373,9 +354,6 @@ def save_snapshot(uid, timestamp, room_snapshot):
         'item_list': room_snapshot.get_snapshot_object_item_list()
     })
 
-    # 유저의 프로필 내 최신 스냅샷 정보 동기화
-    update_profile_snapshot_preview(uid)
-
     return timestamp
 
 # 스냅샷 소개글 수정
@@ -395,9 +373,6 @@ def modify_snapshot_intro(uid, timestamp, modified_intro):
         return False
     
     dir.update({'snapshot_intro':modified_intro})
-    
-    # 유저의 프로필 내 최신 스냅샷 정보 동기화
-    update_profile_snapshot_preview(uid)
 
     print("Modify snapshot introduction success.")
     return True
@@ -498,9 +473,6 @@ def delete_snapshot(uid, timestamp):
     if dir.get() is not None:
         # SNAPSHOT에서 해당 스냅샷 삭제
         dir.delete()
-
-        # 유저의 프로필 내 최신 스냅샷 정보 동기화
-        update_profile_snapshot_preview(uid)
 
         print("Delete " + str(uid) + ", " + str(timestamp) + " snapshot success.")
         return True
