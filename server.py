@@ -7,7 +7,7 @@ from datetime import datetime
 from time import sleep
 from DBctrl.newsfeed import remove_old_newsfeed
 
-buf_size = 1024 # read buffer size
+buf_size = 16384 # read buffer size
 
 if not firebase_admin._apps: # if firebase_admin not setted
     cred = firebase_admin.credentials.Certificate("../key/key.json") # find key file and make Certificate
