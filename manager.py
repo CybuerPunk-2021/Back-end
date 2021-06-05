@@ -160,7 +160,7 @@ def profile_info(data, socket):
             snap['like_num'] = len(snap['like_user'])
             del snap['like_user']
         else:
-            snap['like_num'] = 0
+            snap = {'timestamp': "", 'like_num': 0, 'snapshot_intro': ""}
         ret['snapshot_info'] = snap
 
         send(ret, socket)
