@@ -156,7 +156,7 @@ def profile_info(data, socket):
     else:
         ret = {'action': 'profile_info', 'follower': res['num_follower'], 'self_intro': res['introduction']}
         snap = snapshot.get_user_latest_snapshot(data['uid'])
-        if 'like_user' in snap:
+        if snap and 'like_user' in snap:
             snap['like_num'] = len(snap['like_user'])
             del snap['like_user']
         else:
