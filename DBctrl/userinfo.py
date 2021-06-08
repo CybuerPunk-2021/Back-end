@@ -282,6 +282,9 @@ def login(login_id, password):
     password(str) : 입력한 사용자 로그인 패스워드
     """
     user_data = get_userinfo(login_id)
+    if not user_data:
+        return False
+        
     exist_pw = user_data['login_pw']
 
     # 비밀번호가 일치하지 않는다면 False 반환
