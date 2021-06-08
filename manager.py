@@ -126,7 +126,12 @@ def login(data, socket):
     if not res:
         ret = {'action': 'False'}
     else:
+        snap = snapshot.get_user_latest_snapshot(res[1])
         ret = {'action':'True', 'nickname': res[0], 'uid': int(res[1])}
+        if snap:
+            ret['timestamp'] = snap['timestamp']
+        else:
+            ret['timestamp'] = ""
     send(ret, socket)
 
 def get_home(data, socket):
@@ -156,11 +161,14 @@ def profile_info(data, socket):
     else:
         ret = {'action': 'profile_info', 'follower': res['num_follower'], 'self_intro': res['introduction']}
         snap = snapshot.get_user_latest_snapshot(data['uid'])
-        if 'like_user' in snap:
-            snap['like_num'] = len(snap['like_user'])
-            del snap['like_user']
+        if snap:
+            if 'like_user' in snap:
+                snap['like_num'] = len(snap['like_user'])
+                del snap['like_user']
+            else:
+                snap['like_num'] = 0
         else:
-            snap['like_num'] = 0
+            snap = {'timestamp': "", 'like_num': 0, 'snapshot_intro': ""}
         ret['snapshot_info'] = snap
 
         send(ret, socket)
