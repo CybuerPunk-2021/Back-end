@@ -10,7 +10,9 @@ def login_out(func):
     def _login_out(_to):
         global s
         s = smtplib.SMTP('smtp.gmail.com', 587)
+        s.ehlo()
         s.starttls()
+        s.ehlo()
         s.login(_from, _pw)
         ret = func(_to)
         s.quit()
