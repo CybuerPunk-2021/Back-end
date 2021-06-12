@@ -31,8 +31,8 @@ class c_sck(Thread): # client socket thread object
         while True: # repeat
             print('receiving...')
             try: # while connection is alive
-                start = datetime.now()
                 get_data = self.c_socket.recv(buf_size) # receive data
+                start = datetime.now()
                 data = get_data.decode() # decode data
                 data = data.replace("'", "\"") # replace single quote to double
                 print(str(data)) # log
