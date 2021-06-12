@@ -2,7 +2,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
 from manager import manage
 import json
-import firebase_admin
+from firebase_admin import credentials, db, initialize_app
 from datetime import datetime
 from time import sleep
 from DBctrl.newsfeed import remove_old_newsfeed
@@ -10,8 +10,8 @@ from DBctrl.newsfeed import remove_old_newsfeed
 buf_size = 1000000 # read buffer size
 
 if not firebase_admin._apps: # if firebase_admin not setted
-    cred = firebase_admin.credentials.Certificate("../key/key.json") # find key file and make Certificate
-    firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'}) # make credentials
+    cred = credentials.Certificate("../key/key.json") # find key file and make Certificate
+    initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'}) # make credentials
 
 class c_sck(Thread): # client socket thread object
     def __init__(self, socket, lst): # init method
@@ -31,6 +31,7 @@ class c_sck(Thread): # client socket thread object
         while True: # repeat
             print('receiving...')
             try: # while connection is alive
+                db.reference('').get()
                 get_data = self.c_socket.recv(buf_size) # receive data
                 start = datetime.now()
                 data = get_data.decode() # decode data
