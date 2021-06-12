@@ -1,6 +1,8 @@
 from firebase_admin import db
 from .follow import is_following
 
+import time
+
 # PROFILE 데이터베이스 구조
 """
 'PROFILE':
@@ -76,6 +78,22 @@ def get_profile_image_time(uid):
     uid(int) : 해당 프로필 유저의 uid
     """
     return db.reference('PROFILE').child(str(uid)).child('profile_image_time').get()
+
+def get_profile_image_time_list():
+    profile = db.reference('PROFILE').get()
+    timestamp_list = []
+
+    for uid in profile:
+        if 'profile_image_time' in profile[uid]:
+            timestamp_list.append({
+                'uid': uid,
+                'timestamp': profile[uid]['profile_image_time']})
+        else:
+            timestamp_list.append({
+                'uid': uid,
+                'timestamp': None})
+    return timestamp_list
+
 # 프로필 배경 이미지 최근 수정 시각 요청
 def get_profile_background_image_time(uid):
     """
