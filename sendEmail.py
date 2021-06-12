@@ -33,7 +33,7 @@ def signup_send_mail(_to):
 @login_out
 def modify_pw_send_mail(_to):
     global s
-    lst = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    lst = "123456789abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
     res = ""
     for _ in range(8):
         res += choice(lst)

@@ -31,12 +31,15 @@ class c_sck(Thread): # client socket thread object
         while True: # repeat
             print('receiving...')
             try: # while connection is alive
+                start = datetime.now()
                 get_data = self.c_socket.recv(buf_size) # receive data
                 data = get_data.decode() # decode data
                 data = data.replace("'", "\"") # replace single quote to double
                 print(str(data)) # log
                 data = json.loads(data) # convert data to json(dict)
                 manage(data, self.c_socket, self.addr[0]) # manage
+                end = datetime.now()
+                print("RESPONSE TIME: " + str(end - start))
             except ConnectionResetError: # when connection is die
                 self.c_socket.close() # close socket
                 self.lst.remove(self) # remove self from client list
