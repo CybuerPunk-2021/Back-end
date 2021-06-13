@@ -83,9 +83,9 @@ def get_profile_image_time_list(uid):
     profile = db.reference('PROFILE').get()
     timestamp_list = []
 
-    for uid in profile:
-        if 'profile_image_time' in profile[uid]:
-            timestamp_list.append(profile[uid]['profile_image_time'])
+    for _uid in uid:
+        if 'profile_image_time' in profile[str(_uid)]:
+            timestamp_list.append(profile[str(_uid)]['profile_image_time'])
         else:
             timestamp_list.append("")
     return timestamp_list
