@@ -85,9 +85,9 @@ def get_profile_image_time_list(uid):
 
     for uid in profile:
         if 'profile_image_time' in profile[uid]:
-            timestamp_list.append({'timestamp': profile[uid]['profile_image_time']})
+            timestamp_list.append(profile[uid]['profile_image_time'])
         else:
-            timestamp_list.append({'timestamp': None})
+            timestamp_list.append("")
     return timestamp_list
 
 # 프로필 배경 이미지 최근 수정 시각 요청
