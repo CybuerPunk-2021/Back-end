@@ -293,4 +293,4 @@ def login(login_id, password):
 
     # 비밀번호가 일치하면 닉네임, uid 정보 반환
     nickname = get_profile_nickname(user_data['uid'])
-    return [nickname, user_data['uid']]
+    return [nickname, user_data['uid'], user_data['auth_email']]

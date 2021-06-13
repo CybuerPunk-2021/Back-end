@@ -79,9 +79,18 @@ def get_profile_image_time(uid):
     """
     return db.reference('PROFILE').child(str(uid)).child('profile_image_time').get()
 
-def get_profile_image_time_list():
+def get_profile_image_time_list(uid):
     profile = db.reference('PROFILE').get()
     timestamp_list = []
+
+    for _uid in uid:
+        if 'profile_image_time' in profile[str(_uid)]:
+            timestamp_list.append(profile[str(_uid)]['profile_image_time'])
+        else:
+            timestamp_list.append("")
+
+    return timestamp_list
+    """
 
     for uid in profile:
         if 'profile_image_time' in profile[uid]:
@@ -93,6 +102,7 @@ def get_profile_image_time_list():
                 'uid': uid,
                 'timestamp': None})
     return timestamp_list
+    """
 
 # 프로필 배경 이미지 최근 수정 시각 요청
 def get_profile_background_image_time(uid):

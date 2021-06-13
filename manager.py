@@ -127,7 +127,7 @@ def login(data, socket):
         ret = {'action': 'False'}
     else:
         snap = snapshot.get_user_latest_snapshot(res[1])
-        ret = {'action':'True', 'nickname': res[0], 'uid': int(res[1])}
+        ret = {'action':'True', 'nickname': res[0], 'uid': int(res[1]), 'email': res[2]}
         if snap:
             ret['timestamp'] = snap['timestamp']
         else:
@@ -414,9 +414,7 @@ def chg_profile_img(data, socket):
     send(ret, socket)
 
 def chk_profile_img(data, socket):
-    ts = profile.get_profile_image_time(data['uid'])
-    if not ts:
-        ts = ""
+    ts = profile.get_profile_image_time_list(data['uid'])
     ret = {'action': 'chk_profile_img', 'timestamp': ts}
     send(ret, socket)
 
