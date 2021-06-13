@@ -83,26 +83,12 @@ def get_profile_image_time_list(uid):
     profile = db.reference('PROFILE').get()
     timestamp_list = []
 
-    for _uid in uid:
-        if 'profile_image_time' in profile[str(_uid)]:
-            timestamp_list.append(profile[str(_uid)]['profile_image_time'])
-        else:
-            timestamp_list.append("")
-
-    return timestamp_list
-    """
-
     for uid in profile:
         if 'profile_image_time' in profile[uid]:
-            timestamp_list.append({
-                'uid': uid,
-                'timestamp': profile[uid]['profile_image_time']})
+            timestamp_list.append({'timestamp': profile[uid]['profile_image_time']})
         else:
-            timestamp_list.append({
-                'uid': uid,
-                'timestamp': None})
+            timestamp_list.append({'timestamp': None})
     return timestamp_list
-    """
 
 # 프로필 배경 이미지 최근 수정 시각 요청
 def get_profile_background_image_time(uid):
