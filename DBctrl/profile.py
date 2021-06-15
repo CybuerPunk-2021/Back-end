@@ -129,7 +129,7 @@ def get_profile_image_size(uid):
     if str(uid) in _profile and 'profile_image_size' in _profile[str(uid)]:
         return _profile[str(uid)]['profile_image_size']
     else:
-        return 0
+        return 52854
 
 def get_profile_image_time_list(uid):
     timestamp_list = []
@@ -148,7 +148,7 @@ def get_profile_image_size_list(uid):
         if str(_uid) in _profile and 'profile_image_size' in _profile[str(_uid)]:
             size_list.append(_profile[str(_uid)]['profile_image_size'])
         else:
-            size_list.append(0)
+            size_list.append(52854)
     return size_list
 
 # 프로필 배경 이미지 최근 수정 시각 요청
@@ -170,7 +170,7 @@ def get_profile_background_image_size(uid):
     if str(uid) in _profile and 'bg_image_size' in _profile[str(uid)]:
         return _profile[str(uid)]['bg_image_size']
     else:
-        return 0
+        return 462393
 
 # 팔로잉 수 요청
 def get_following_num(uid):
