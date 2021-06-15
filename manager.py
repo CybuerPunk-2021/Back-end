@@ -389,7 +389,7 @@ def visit_book_write(data, socket):
 def search(data, socket):
     query = profile.search_profile(data['query'], data['uid'])
     for q in query:
-        q['isfollow'] = follow.is_following(data['uid'], q['uid'])
+        q['isfollow'] = str(follow.is_following(data['uid'], q['uid']))
     res = {'action': 'search', 'result': query}
     send(res, socket)
 
