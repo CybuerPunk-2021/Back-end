@@ -144,10 +144,10 @@ def get_profile_image_size_list(uid):
 
     for _uid in uid:
         if str(_uid) in _profile and 'profile_image_size' in _profile[str(_uid)]:
-            timestamp_list.append(_profile[str(_uid)]['profile_image_size'])
+            size_list.append(_profile[str(_uid)]['profile_image_size'])
         else:
-            timestamp_list.append(0)
-    return timestamp_list
+            size_list.append(0)
+    return size_list
 
 # 프로필 배경 이미지 최근 수정 시각 요청
 def get_profile_background_image_time(uid):
