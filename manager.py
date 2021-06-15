@@ -469,6 +469,7 @@ def snapshot_size(data, socket):
     else:
         ret = {'action': 'err'}
     send(ret, socket)
+    snapshot.save()
 
 def backup_log(data, socket):
     log_path = getcwd() + "/../data/log/" + get_timestamp()
