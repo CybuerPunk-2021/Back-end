@@ -167,8 +167,8 @@ def get_profile_background_image_size(uid):
     제일 최근 유저의 배경 이미지 사이즈를 얻는 함수
     uid(int) : 해당 배경 유저의 uid
     """
-    if str(uid) in _profile and 'bg_image_size' in _profile[str(uid)]:
-        return _profile[str(uid)]['bg_image_size']
+    if str(uid) in _profile and 'profile_bg_size' in _profile[str(uid)]:
+        return _profile[str(uid)]['profile_bg_size']
     else:
         return 462393
 
