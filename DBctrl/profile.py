@@ -18,7 +18,9 @@ _profile = db.reference('PROFILE').get()
         'num_follower': 팔로워 수,
         'num_following': 팔로잉 수,
         'profile_image_time': '가장 최근에 프로필 이미지를 변경한 시각',
+        'profile_image_size': 프로필 이미지 사이즈,
         'bg_image_time': '가장 최근에 배경 이미지를 변경한 시각',
+        'bg_image_size': 배경 이미지 사이즈
     }
 }
 """
@@ -115,7 +117,17 @@ def get_profile_image_time(uid):
     if str(uid) in _profile and 'profile_image_time' in _profile[str(uid)]:
         return _profile[str(uid)]['profile_image_time']
     else:
-        return None
+        return ""
+
+def get_profile_image_size(uid):
+    """
+    제일 최근 유저의 프로필 이미지 사이즈를 얻는 함수
+    uid(int) : 해당 프로필 유저의 uid
+    """
+    if str(uid) in _profile and 'profile_image_size' in _profile[str(uid)]:
+        return _profile[str(uid)]['profile_image_size']
+    else:
+        return 0
 
 def get_profile_image_time_list(uid):
     timestamp_list = []
@@ -127,6 +139,16 @@ def get_profile_image_time_list(uid):
             timestamp_list.append("")
     return timestamp_list
 
+def get_profile_image_size_list(uid):
+    size_list = []
+
+    for _uid in uid:
+        if str(_uid) in _profile and 'profile_image_size' in _profile[str(_uid)]:
+            timestamp_list.append(_profile[str(_uid)]['profile_image_size'])
+        else:
+            timestamp_list.append(0)
+    return timestamp_list
+
 # 프로필 배경 이미지 최근 수정 시각 요청
 def get_profile_background_image_time(uid):
     """
@@ -136,7 +158,17 @@ def get_profile_background_image_time(uid):
     if str(uid) in _profile and 'bg_image_time' in _profile[str(uid)]:
         return _profile[str(uid)]['bg_image_time']
     else:
-        return None
+        return ""
+
+def get_profile_background_image_size(uid):
+    """
+    제일 최근 유저의 배경 이미지 사이즈를 얻는 함수
+    uid(int) : 해당 배경 유저의 uid
+    """
+    if str(uid) in _profile and 'profile_bg_size' in _profile[str(uid)]:
+        return _profile[str(uid)]['profile_bg_size']
+    else:
+        return 0
 
 # 팔로잉 수 요청
 def get_following_num(uid):
@@ -257,6 +289,16 @@ def modify_profile_image_time(uid, timestamp):
     """
     if str(uid) in _profile:
         _profile[str(uid)]['profile_image_time'] = timestamp
+
+def modify_profile_image_size(uid, size):
+    """
+    제일 최근 프로필 이미지의 사이즈를 변경하는 함수
+
+    uid(int) : 해당 프로필 유저의 uid
+    size(int) : 프로필 이미지의 사이즈
+    """
+    if str(uid) in _profile:
+        _profile[str(uid)]['profile_image_size'] = size
     
 # 프로필 배경 이미지 최근 수정 시각 변경
 def modify_profile_background_image_time(uid, timestamp):
@@ -268,6 +310,16 @@ def modify_profile_background_image_time(uid, timestamp):
     """
     if str(uid) in _profile:
         _profile[str(uid)]['bg_image_time'] = timestamp
+
+def modify_background_image_size(uid, size):
+    """
+    제일 최근 배경 이미지의 사이즈를 변경하는 함수
+
+    uid(int) : 해당 프로필 유저의 uid
+    size(int) : 배경 이미지의 사이즈
+    """
+    if str(uid) in _profile:
+        _profile[str(uid)]['profile_bg_size'] = size
 
 # 회원탈퇴 시 프로필 데이터 삭제
 def delete_profile(uid):

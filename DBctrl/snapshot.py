@@ -215,6 +215,7 @@ class SnapshotObj:
             'snapshot_intro': '스냅샷 소개글',
             'thumbnail': '스냅샷 썸네일 이미지 경로',
             'like_user': [좋아요 표시한 유저 uid,...],
+            'size': 스냅샷 이미지 사이즈,
             'item_list': 
             [
                 {
@@ -459,6 +460,31 @@ def delete_snapshot(uid, timestamp):
     else:
         print("There's no snapshot with that uid or timestamp.")
         return False
+
+def modify_snapshot_size(uid, timestamp, size):
+    """
+    스냅샷의 이미지 사이즈 변경
+    uid(int) : 스냅샷을 만든 유저의 uid
+    timestamp(str) : 스냅샷의 타임스탬프 값
+    size(int) : 스냅샷 이미지의 사이즈
+    """
+    if str(uid) in _snapshot and timestamp in _snapshot[str(uid)]:
+        _snapshot[str(uid)][timestamp]['size'] = size
+        return True
+    else:
+        print("There's no snapshot with that uid or timestamp.")
+        return False
+
+def get_snapshot_size(uid, timestamp):
+    """
+    스냅샷 이미지의 사이즈 가져오기
+    uid(int) : 스냅샷을 만든 유저의 uid
+    timestamp(str) : 스냅샷의 타임스탬프 값
+    """
+    if str(uid) in _snapshot and timestamp in _snapshot[str(uid)] and 'size' in _snapshot[str(uid)][timestamp]:
+        return _snapshot[str(uid)][timestamp]['size']
+    else:
+        return 0
 
 def save():
     dir = db.reference('SNAPSHOT')

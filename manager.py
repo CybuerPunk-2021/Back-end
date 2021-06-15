@@ -150,6 +150,7 @@ def get_home(data, socket):
         for snap in res:
             _snap = snapshot.get_snapshot(snap['uid'], snap['timestamp'])
             snap['snapshot_intro'] = _snap['snapshot_intro']
+            snap['size'] = snapshot.get_snapshot_size(snap['uid'], snap['timestamp'])
             if 'like_user' in _snap:
                 snap['like'] = str(data['uid'] in _snap['like_user'])
                 snap['like_num'] = len(_snap['like_user'])
@@ -170,13 +171,14 @@ def profile_info(data, socket):
         ret = {'action': 'profile_info', 'follower': res['num_follower'], 'self_intro': res['introduction']}
         snap = snapshot.get_user_latest_snapshot(data['uid'])
         if snap:
+            snap['size'] = snapshot.get_snapshot_size(data['uid'], snap['timestamp'])
             if 'like_user' in snap:
                 snap['like_num'] = len(snap['like_user'])
                 del snap['like_user']
             else:
                 snap['like_num'] = 0
         else:
-            snap = {'timestamp': "", 'like_num': 0, 'snapshot_intro': ""}
+            snap = {'timestamp': "", 'like_num': 0, 'snapshot_intro': "", 'size': 0}
         ret['snapshot_info'] = snap
 
         send(ret, socket)
@@ -405,6 +407,7 @@ def snapshot_album(data, socket):
     for _snap in _album:
         snap = {'timestamp': _snap}
         snap['snapshot_intro'] = album[_snap]['snapshot_intro']
+        snap['size'] = snapshot.get_snapshot_size(data['uid'], _sanp)
         if 'like_user' in album[_snap]:
             snap['like_num'] = len(album[_snap]['like_user'])
         else:
@@ -435,28 +438,36 @@ def find_pw(data, socket):
 def chg_profile_img(data, socket):
     ts = get_timestamp()
     profile.modify_profile_image_time(data['uid'], ts)
+    profile.modify_profile_image_size(data['uid'], data['size'])
     ret = {'action': 'chg_profile_img', 'timestamp': ts}
     send(ret, socket)
     profile.save()
 
 def chk_profile_img(data, socket):
     ts = profile.get_profile_image_time_list(data['uid'])
-    ret = {'action': 'chk_profile_img', 'timestamp': ts}
+    sz = profile.get_profile_image_size_list(data['uid'])
+    ret = {'action': 'chk_profile_img', 'timestamp': ts, 'size': sz}
     send(ret, socket)
 
 def chg_bg_img(data, socket):
     ts = get_timestamp()
     profile.modify_profile_background_image_time(data['uid'], ts)
+    profile.modify_profile_background_image_size(data['uid'], data['size'])
     ret = {'action': 'chg_bg_img', 'timestamp': ts}
     send(ret, socket)
     profile.save()
 
 def chk_bg_img(data, socket):
     ts = profile.get_profile_background_image_time(data['uid'])
-    if not ts:
-        ts = ""
-    ret = {'action': 'chk_bg_img', 'timestamp': ts}
+    sz = profile.get_profile_background_image_size(data['uid'])
+    ret = {'action': 'chk_bg_img', 'timestamp': ts, 'size': sz}
     send(ret, socket)
+
+def snapshot_size(data, socket):
+    if snapshot.modify_snapshot_size(data['uid'], data['timestamp'], data['size']):
+        ret = {'action': 'OK'}
+    else:
+        ret = {'action': 'err'}
 
 def backup_log(data, socket):
     log_path = getcwd() + "/../data/log/" + get_timestamp()
@@ -520,5 +531,6 @@ manage_list = {
     'chk_profile_img': chk_profile_img,
     'chg_bg_img': chg_bg_img,
     'chk_bg_img': chk_bg_img,
+    'snapshot_size': snapshot_size,
     'backup_log': backup_log
 }
