@@ -407,7 +407,7 @@ def snapshot_album(data, socket):
     for _snap in _album:
         snap = {'timestamp': _snap}
         snap['snapshot_intro'] = album[_snap]['snapshot_intro']
-        snap['size'] = snapshot.get_snapshot_size(data['uid'], _sanp)
+        snap['size'] = snapshot.get_snapshot_size(data['uid'], _snap)
         if 'like_user' in album[_snap]:
             snap['like_num'] = len(album[_snap]['like_user'])
         else:
