@@ -1,18 +1,20 @@
+import firebase_admin
+from firebase_admin import credentials, db, initialize_app
+if not firebase_admin._apps: # if firebase_admin not setted
+    cred = credentials.Certificate("../key/key.json") # find key file and make Certificate
+    initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'}) # make credentials
+
 from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
 from manager import manage
 import json
-import firebase_admin
-from firebase_admin import credentials, db, initialize_app
 from datetime import datetime
 from time import sleep
 from DBctrl.newsfeed import remove_old_newsfeed
+from DBctrl import *
 
 buf_size = 1000000 # read buffer size
 
-if not firebase_admin._apps: # if firebase_admin not setted
-    cred = credentials.Certificate("../key/key.json") # find key file and make Certificate
-    initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'}) # make credentials
 
 class c_sck(Thread): # client socket thread object
     def __init__(self, socket, lst): # init method
@@ -32,16 +34,12 @@ class c_sck(Thread): # client socket thread object
         while True: # repeat
             print('receiving...')
             try: # while connection is alive
-                db.reference('').get()
                 get_data = self.c_socket.recv(buf_size) # receive data
-                start = datetime.now()
                 data = get_data.decode() # decode data
                 data = data.replace("'", "\"") # replace single quote to double
                 print(str(data)) # log
                 data = json.loads(data) # convert data to json(dict)
                 manage(data, self.c_socket, self.addr[0]) # manage
-                end = datetime.now()
-                print("RESPONSE TIME: " + str(end - start))
             except ConnectionResetError: # when connection is die
                 self.c_socket.close() # close socket
                 self.lst.remove(self) # remove self from client list
@@ -77,6 +75,12 @@ _chk_newsfeed.start() # start Thread
 while True: # repeat
     inp = input() # input data
     if inp == 'q': # if input is 'q' then
+        follow.save()
+        newsfeed.save()
+        profile.save()
+        snapshot.save()
+        userinfo.save()
+        visitbook.save()
         break # break server
     else: # else
         try: 

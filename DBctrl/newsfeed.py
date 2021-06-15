@@ -3,6 +3,8 @@ from datetime import date, timedelta
 
 from .follow import get_user_following_uid_list
 
+_newsfeed = db.reference('NEWSFEED').get()
+
 # NEWSFEED 데이터베이스 구조
 """
 'NEWSFEED':
@@ -21,30 +23,28 @@ from .follow import get_user_following_uid_list
 # timestamp로 정렬해서 앞에서부터 짤라서 주기
 
 def make_newsfeed(uid, nickname):
-    dir = db.reference('NEWSFEED')
-    dir.update({uid: {'nickname': nickname}})
+    _newsfeed[str(uid)] = {'nickname': nickname}
 
 def get_all_newsfeed():
-    return db.reference('NEWSFEED').get()
+    return _newsfeed
 
 def get_newsfeed_one_uid(uid):
-    dir = db.reference('NEWSFEED').child(str(uid))
-
-    return dir.get()
+    if str(uid) in _newsfeed:
+        return _newsfeed[str(uid)]
+    else:
+        return None
 
 def get_newsfeed_uid(uid):
     lst = get_user_following_uid_list(uid)
-    print(lst)
     ret = []
     if lst:
-        for follow in lst:
-            _newsfeed = get_newsfeed_one_uid(follow)
-            if _newsfeed and 'snapshot' in _newsfeed:
-                for _newstime in _newsfeed['snapshot']:
+        for _follow in lst:
+            if str(_follow) in _newsfeed and 'snapshot' in _newsfeed[str(_follow)]:
+                for _newstime in _newsfeed[str(_follow)]['snapshot']:
                     _ret = {}
                     _ret['timestamp'] = _newstime
-                    _ret['uid'] = follow
-                    _ret['nickname'] = _newsfeed['nickname']
+                    _ret['uid'] = _follow
+                    _ret['nickname'] = _newsfeed[str(_follow)]['nickname']
                     ret.append(_ret)
 
         ret = sorted(ret, key = (lambda x:x['timestamp']), reverse=True)
@@ -53,45 +53,44 @@ def get_newsfeed_uid(uid):
         return None
 
 def add_snap(uid, timestamp):
-    dir = db.reference('NEWSFEED').child(str(uid)).child('snapshot')
-    t = dir.get()
-    if t is None:
-        t = [timestamp]
+    if str(uid) in _newsfeed and 'snapshot' in _newsfeed[str(uid)]:
+        _newsfeed[str(uid)]['snapshot'].append(timestamp)
     else:
-        t.append(timestamp)
-    dir = db.reference('NEWSFEED').child(str(uid))
-    dir.update({'snapshot': t})
+        _newsfeed[str(uid)]['snapshot'] = [timestamp]
 
 def del_snap(uid, timestamp):
-    dir = db.reference('NEWSFEED').child(str(uid)).child('snapshot')
-    snap = dir.get()
-    if timestamp in snap:
-        snap.remove(timestamp)
-        dir = db.reference('NEWSFEED').child(str(uid))
-        dir.update({'snapshot': snap})
+    if str(uid) in _newsfeed and 'snapshot' in _newsfeed[str(uid)] and timestamp in _newsfeed[str(uid)]['snapshot']:
+        _newsfeed[str(uid)]['snapshot'].remove(timestamp)
         return True
     else:
         return False
 
 def mod_nick(uid, nickname):
-    dir = db.reference('NEWSFEED').child(str(uid))
-    if dir.get() is not None:
-        dir.update({'nickname': nickname})
+    if str(uid) in _newsfeed:
+        _newsfeed[str(uid)]['nickname'] = nickname
+        return True
+    else:
+        return False
+
+def delete_user(uid):
+    if str(uid) in _newsfeed:
+        del _newsfeed[str(uid)]
         return True
     else:
         return False
 
 def remove_old_newsfeed():
-    dir = db.reference('NEWSFEED')
-    all_news = dir.get()
     last_day = (date.today() - timedelta(6)).strftime('%Y%m%d')
-    for uid in all_news:
-        if not 'snapshot' in all_news[uid]:
+    for uid in _newsfeed:
+        if not 'snapshot' in _newsfeed[uid]:
             continue
         cnt = 0
-        for i in range(len(all_news[uid]['snapshot'])):
-            if all_news[uid]['snapshot'][i][:8] < last_day:
+        for i in range(len(_newsfeed[uid]['snapshot'])):
+            if _newsfeed[uid]['snapshot'][i][:8] < last_day:
                 cnt = cnt + 1
-        all_news[uid]['snapshot'] = all_news[uid]['snapshot'][cnt:]
-        _dir = dir.child(uid)
-        _dir.update({'snapshot': all_news[uid]['snapshot']})
+        _newsfeed[uid]['snapshot'] = _newsfeed[uid]['snapshot'][cnt:]
+    save()
+
+def save():
+    dir = db.reference('NEWSFEED')
+    dir.update(_newsfeed)

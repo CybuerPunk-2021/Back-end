@@ -1,8 +1,7 @@
 from firebase_admin import db
+from .follow import is_following
 
 import time
-
-_profile = db.reference('PROFILE').get()
 
 # PROFILE 데이터베이스 구조
 """
@@ -23,34 +22,6 @@ _profile = db.reference('PROFILE').get()
 }
 """
 
-def increase_following_num(uid):
-    if str(uid) in _profile:
-        _profile[str(uid)]['num_following'] = _profile[str(uid)]['num_following'] + 1
-        return True
-    else:
-        return False
-
-def increase_follower_num(uid):
-    if str(uid) in _profile:
-        _profile[str(uid)]['num_follower'] = _profile[str(uid)]['num_follower'] + 1
-        return True
-    else:
-        return False
-
-def decrease_following_num(uid):
-    if str(uid) in _profile:
-        _profile[str(uid)]['num_following'] = _profile[str(uid)]['num_following'] - 1
-        return True
-    else:
-        return False
-
-def decrease_follower_num(uid):
-    if str(uid) in _profile:
-        _profile[str(uid)]['num_follower'] = _profile[str(uid)]['num_follower'] - 1
-        return True
-    else:
-        return False
-
 def is_profile_exist(uid):
     """
     해당 uid 값을 가진 유저가 존재하는지 알려주는 함수
@@ -58,10 +29,8 @@ def is_profile_exist(uid):
 
     uid(int) : 찾고자 하는 유저의 uid
     """
-    if str(uid) in _profile:
-        return True
-    else:
-        return False
+    dir = db.reference('PROFILE').child(str(uid))
+    return dir.get() is not None
 
 def is_profile_nickname_exist(nickname):
     """
@@ -70,16 +39,16 @@ def is_profile_nickname_exist(nickname):
 
     nickname(str) : 찾고자 하는 닉네임 값
     """
-    for uid in _profile:
-        if _profile[uid]['nickname'] == nickname:
-            return True
-    return False
+    dir = db.reference('PROFILE')
+    founded_info = dir.order_by_child('nickname').equal_to(nickname).get()
+
+    return len(founded_info) > 0
 
 def get_all_profile():
     """
     DB에 있는 모든 유저의 프로필 내용을 불러오는 함수
     """
-    return _profile
+    return db.reference('PROFILE').get()
 
 # 유저 프로필 요청
 def get_profile(uid):
@@ -89,10 +58,10 @@ def get_profile(uid):
 
     uid(int) : 해당 프로필 유저의 uid
     """
-    if str(uid) in _profile:
-        return _profile[str(uid)]
-    else:
-        return None
+    dir = db.reference('PROFILE').child(str(uid))
+    profile_data = dir.get()
+
+    return profile_data
 
 # 프로필 닉네임 요청
 def get_profile_nickname(uid):
@@ -101,28 +70,22 @@ def get_profile_nickname(uid):
 
     uid(int) : 해당 프로필 유저의 uid
     """
-    if str(uid) in _profile and 'nickname' in _profile[str(uid)]:
-        return _profile[str(uid)]['nickname']
-    else:
-        return None
-
+    return db.reference('PROFILE').child(str(uid)).child('nickname').get()
 # 프로필 이미지 최근 수정 시각 요청
 def get_profile_image_time(uid):
     """
     제일 최근 유저의 프로필 이미지를 변경한 시각을 얻는 함수
     uid(int) : 해당 프로필 유저의 uid
     """
-    if str(uid) in _profile and 'profile_image_time' in _profile[str(uid)]:
-        return _profile[str(uid)]['profile_image_time']
-    else:
-        return None
+    return db.reference('PROFILE').child(str(uid)).child('profile_image_time').get()
 
 def get_profile_image_time_list(uid):
+    profile = db.reference('PROFILE').get()
     timestamp_list = []
 
     for _uid in uid:
-        if str(_uid) in _profile and 'profile_image_time' in _profile[str(_uid)]:
-            timestamp_list.append(_profile[str(_uid)]['profile_image_time'])
+        if 'profile_image_time' in profile[str(_uid)]:
+            timestamp_list.append(profile[str(_uid)]['profile_image_time'])
         else:
             timestamp_list.append("")
     return timestamp_list
@@ -133,11 +96,7 @@ def get_profile_background_image_time(uid):
     제일 최근 유저의 프로필 배경 이미지를 변경한 시각을 얻는 함수
     uid(int) : 해당 프로필 유저의 uid
     """
-    if str(uid) in _profile and 'bg_image_time' in _profile[str(uid)]:
-        return _profile[str(uid)]['bg_image_time']
-    else:
-        return None
-
+    return db.reference('PROFILE').child(str(uid)).child('bg_image_time').get()
 # 팔로잉 수 요청
 def get_following_num(uid):
     """
@@ -145,11 +104,7 @@ def get_following_num(uid):
 
     uid(str) : 유저의 uid
     """
-    if str(uid) in _profile:
-        return _profile[str(uid)]['num_following']
-    else:
-        return 0
-
+    return db.reference('PROFILE').child(str(uid)).child('num_following').get() or 0
 # 팔로워 수 요청
 def get_follower_num(uid):
     """
@@ -157,10 +112,7 @@ def get_follower_num(uid):
 
     uid(str) : 유저의 uid
     """
-    if str(uid) in _profile:
-        return _profile[str(uid)]['num_follower']
-    else:
-        return 0
+    return db.reference('PROFILE').child(str(uid)).child('num_follower').get() or 0
 
 # 프로필 검색
 def search_profile(nickname, from_uid):
@@ -171,13 +123,15 @@ def search_profile(nickname, from_uid):
     nickname(str) : 닉네임 검색 키워드
     """
     # 검색 키워드가 아무 값도 없는 경우라면 그대로 넘어감
-    if nickname == "":
+    if nickname is "":
         return []
     
+    search_data = db.reference('PROFILE').order_by_child('nickname_upper').start_at(str(nickname.upper())).end_at(str(nickname.upper()) + '\uf8ff').get()
+    
     return_list = []
-    for uid in _profile:
-        if nickname.upper() in _profile[uid]['nickname_upper']:
-            return_list.append({'uid': int(uid), 'nickname': _profile[uid]['nickname']})
+    if len(search_data) > 0:
+        for uid, data in search_data.items():
+            return_list.append({'uid': uid, 'nickname': data['nickname'], 'isfollow': str(is_following(from_uid, uid))})
 
     return return_list
 
@@ -190,11 +144,10 @@ def make_profile(uid, login_id, nickname, timestamp):
     uid(str) : 해당 프로필 유저의 uid
     login_id(str) : 해당 프로필 유저의 로그인 아이디
     """
-    if str(uid) in _profile:
-        return False
     
     # 현재 DB상에 같은 uid 값이 없으면 진행
-    _profile[str(uid)] = {
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.set({
         'login_id': str(login_id),
         'login_id_upper': str(login_id).upper(),
         'nickname': str(nickname),
@@ -202,7 +155,7 @@ def make_profile(uid, login_id, nickname, timestamp):
         'introduction': 'Hello',
         'num_follower': 0,
         'num_following': 0
-    }
+    })
     print("Setting " + login_id + " account's profile success.")
     return True
 
@@ -221,12 +174,17 @@ def modify_nickname(uid, new_name):
         return False
 
     # PROFILE document에 nickname 값 변경
-    if str(uid) in _profile:
-        _profile[str(uid)]['nickname'] = new_name
-        _profile[str(uid)]['nickname_upper'] = new_name.upper()
-        return True
-    return False
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.update({
+        'nickname': new_name,
+        'nickname_upper': new_name.upper()
+        })
+    
+    # NEWSFEED document에 nickname 값 변경
+    dir = db.reference('NEWSFEED').child(str(uid))
+    dir.update({'nickname': new_name})
 
+    return True
 # 간단 소개글 변경
 def modify_introduction(uid, new_intro):
     """
@@ -239,14 +197,13 @@ def modify_introduction(uid, new_intro):
     dir = db.reference('PROFILE').child(str(uid))
 
     # 유효한 유저의 uid 값이 아니면 False 반환
-    if str(uid) not in _profile:
+    if dir.get() is None:
         print("Invalid UID value.")
         return False
 
-    # 소개글 수정 후 True 반환\
-    _profile[str(uid)]['introduction'] = new_intro
+    # 소개글 수정 후 True 반환
+    dir.update({'introduction':new_intro})
     return True
-
 # 프로필 이미지 최근 수정 시각 변경
 def modify_profile_image_time(uid, timestamp):
     """
@@ -255,9 +212,8 @@ def modify_profile_image_time(uid, timestamp):
     uid(int) : 해당 프로필 유저의 uid
     timestamp(str) : 프로필 이미지를 변경한 시각
     """
-    if str(uid) in _profile:
-        _profile[str(uid)]['profile_image_time'] = timestamp
-    
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.update({'profile_image_time': timestamp})
 # 프로필 배경 이미지 최근 수정 시각 변경
 def modify_profile_background_image_time(uid, timestamp):
     """
@@ -266,8 +222,8 @@ def modify_profile_background_image_time(uid, timestamp):
     uid(int) : 해당 프로필 유저의 uid
     timestamp(str) : 프로필 배경 이미지를 변경한 시각
     """
-    if str(uid) in _profile:
-        _profile[str(uid)]['bg_image_time'] = timestamp
+    dir = db.reference('PROFILE').child(str(uid))
+    dir.update({'bg_image_time': timestamp})
 
 # 회원탈퇴 시 프로필 데이터 삭제
 def delete_profile(uid):
@@ -283,12 +239,9 @@ def delete_profile(uid):
         return False
 
     # DB에서 삭제
-    login_id = _profile[str(uid)]['login_id']
-    del _profile[str(uid)]
+    dir = db.reference('PROFILE').child(str(uid))
+    login_id = dir.child('login_id').get()
+    dir.delete()
 
     print("Delete profile.(uid : " + str(uid) + ", login ID : " + str(login_id) + ")")
     return True
-
-def save():
-    dir = db.reference('PROFILE')
-    dir.update(_profile)

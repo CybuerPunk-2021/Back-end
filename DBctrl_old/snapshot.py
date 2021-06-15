@@ -232,13 +232,11 @@ class SnapshotObj:
 }        
 """
 
-_snapshot = db.reference('SNAPSHOT').get()
-
 def get_all_snapshot():
     """
     DB에 저장된 모든 스냅샷 정보를 불러오는 함수
     """
-    return _snapshot
+    return db.reference('SNAPSHOT').get()
 
 def get_user_snapshot(uid):
     """
@@ -246,11 +244,13 @@ def get_user_snapshot(uid):
 
     uid(int) : 스냅샷 데이터를 얻을 유저의 uid
     """
-    if str(uid) in _snapshot:
-        return _snapshot[str(uid)]
-    else:
+    dir = db.reference('SNAPSHOT').child(str(uid))
+
+    # 유저의 스냅샷 데이터가 없으면 None 반환
+    if dir.get() is None:
         print(str(uid) + " user doesn't make snapshot yet.")
         return None
+    return dir.get()
 
 def get_snapshot(uid, timestamp):
     """
@@ -259,11 +259,13 @@ def get_snapshot(uid, timestamp):
     uid(int) : 스냅샷 데이터를 얻을 유저의 uid
     timestamp(str) : 스냅샷 생성 타임스탬프
     """
-    if str(uid) in _snapshot and timestamp in _snapshot[str(uid)]:
-        return _snapshot[str(uid)][timestamp]
-    else:
+    dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
+
+    # 유저의 스냅샷 데이터가 없으면 None 반환
+    if dir.get() is None:
         print("There's no snapshot data which was made at " + str(timestamp) + ".")
         return None
+    return dir.get()
 
 def get_user_latest_snapshot(uid):
     """
@@ -271,14 +273,21 @@ def get_user_latest_snapshot(uid):
 
     uid(int) : 최근 스냅샷 데이터를 얻을 유저의 uid
     """
-    if str(uid) not in _snapshot or len(_snapshot[str(uid)]) == 0:
+    snapshot_data = db.reference('SNAPSHOT').child(str(uid)).order_by_value().limit_to_last(1).get()
+
+    # 최신 스냅샷 데이터가 없으면 None 출력
+    if snapshot_data is None:
         return None
-    else:
-        timestamp = max(_snapshot[str(uid)].keys())
-        latest_snapshot = {'timestamp': timestamp, 'snapshot_intro': _snapshot[str(uid)][timestamp]['snapshot_intro']}
-        if 'like_user' in _snapshot[str(uid)][timestamp]:
-            latest_snapshot['like_user'] = _snapshot[str(uid)][timestamp]['like_user']
-        return latest_snapshot
+    
+    # 데이터가 있으면 변환 후 반환
+    latest_snapshot = {}
+    for timestamp, value in snapshot_data.items():
+        latest_snapshot['timestamp'] = timestamp
+        if 'item_list' in value:
+            del value['item_list']
+        latest_snapshot.update(value)
+
+    return latest_snapshot
 
 # 스냅샷 아이템 리스트
 def get_snapshot_item(uid, timestamp):
@@ -288,11 +297,12 @@ def get_snapshot_item(uid, timestamp):
     uid(int) : 스냅샷 데이터를 얻을 유저의 uid
     timestamp(str) : 스냅샷 생성 타임스탬프
     """
-    if str(uid) not in _snapshot or timestamp not in _snapshot[str(uid)] or 'item_list' not in _snapshot[str(uid)][timestamp]:
+    dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp)).child('item_list')
+    if dir.get() is None:
         print("There's no item in " + str(uid) + "'s " + str(timestamp) + " snapshot.")
         return None
     else:
-        return _snapshot[str(uid)][timestamp]['item_list']
+        return dir.get()
 
 # DB에 저장된 스냅샷 소개글 얻는 함수
 def get_snapshot_intro(uid, timestamp):
@@ -302,10 +312,7 @@ def get_snapshot_intro(uid, timestamp):
     uid(int) : 스냅샷 데이터를 얻을 유저의 uid
     timestamp(str) : 스냅샷 생성 타임스탬프
     """
-    if str(uid) in _snapshot and timestamp in _snapshot[str(uid)] and 'snapshot_intro' in _snapshot[str(uid)][timestamp]:
-        return _snapshot[str(uid)][timestamp]['snapshot_intro']
-    else:
-        return None
+    return db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp)).child('snapshot_intro').get()
 
 # 임의의 유저가 스냅샷을 좋아요 했는지 확인하는 함수
 def is_user_like_snapshot(cur_user_uid, snapshot_creator_uid, timestamp):
@@ -316,10 +323,12 @@ def is_user_like_snapshot(cur_user_uid, snapshot_creator_uid, timestamp):
     snapshot_creator_uid(int) : 해당 스냅샷을 생성한 유저의 uid
     timestamp(str) : 스냅샷 생성 타임스탬프
     """
-    if str(snapshot_creator_uid) in _snapshot and timestamp in _snapshot[str(snapshot_creator_uid)] and 'like_user' in _snapshot[str(snapshot_creator_uid)][timestamp]:
-        return cur_user_uid in _snapshot[str(snapshot_creator_uid)][timestamp]['like_user']
-    else:
+    like_uid_list = db.reference('SNAPSHOT').child(str(snapshot_creator_uid)).child(str(timestamp)).child('like_user').get()
+    # 만약 해당 스냅샷이 좋아요가 없다면 False 반환
+    if like_uid_list is None:
         return False
+    # cur_user가 좋아요를 눌렀는지 True/False 반환
+    return cur_user_uid in like_uid_list
 
 # 스냅샷 생성
 def save_snapshot(uid, timestamp, room_snapshot):
@@ -338,14 +347,13 @@ def save_snapshot(uid, timestamp, room_snapshot):
         return False
 
     # 올바른 정보를 입력했다면 DB에 저장, 해당 스냅샷의 버전 값 반환
-    if str(uid) not in _snapshot:
-        _snapshot[str(uid)] = {}
-    
-    _snapshot[str(uid)][timestamp] = {
+    dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
+    dir.set({
         'snapshot_intro': room_snapshot.get_snapshot_object_intro(),
         'thumbnail': room_snapshot.get_snapshot_object_thumbnail(),
         'item_list': room_snapshot.get_snapshot_object_item_list()
-    }
+    })
+
     return timestamp
 
 # 스냅샷 소개글 수정
@@ -357,13 +365,17 @@ def modify_snapshot_intro(uid, timestamp, modified_intro):
     timestamp(str) : 스냅샷 타임스탬프 값
     modified_intro(str) : 수정할 소개글 내용
     """
-    if str(uid) in _snapshot and timestamp in _snapshot[str(uid)]:
-        _snapshot[str(uid)][timestamp]['snapshot_intro'] = modified_intro
-        print("Modify snapshot introduction success.")
-        return True
-    else:
+    dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
+    
+    # 해당 시각에 생성된 스냅샷이 없다면 False 반환
+    if dir.get() is None:
         print("There's no snapshot with that uid or timestamp.")
         return False
+    
+    dir.update({'snapshot_intro':modified_intro})
+
+    print("Modify snapshot introduction success.")
+    return True
 
 # 스냅샷 좋아요
 def like_snapshot(uid, like_uid, timestamp):
@@ -375,29 +387,32 @@ def like_snapshot(uid, like_uid, timestamp):
     timestamp(str) : 스냅샷의 타임스탬프 값
     like_uid(int) : 스냅샷에 좋아요 표시를 남긴 유저의 uid
     """
+    dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
 
     # 스냅샷 데이터가 없으면 False 반환
-    if str(uid) not in _snapshot or timestamp not in _snapshot[str(uid)]:
+    if dir.get() is None:
         print("There's no snapshot with that uid or timestamp.")
         return False
 
+    user_list = dir.child('like_user').get()
     # 스냅샷에 처음 좋아요 표시를 남기는 경우
-    if 'like_user' not in _snapshot[str(uid)][timestamp]:
-        _snapshot[str(uid)][timestamp]['like_user'] = [like_uid]
-
+    if user_list is None:
+        dir.update({'like_user': [like_uid]})
+        
         print(str(like_uid) + " likes " + str(uid) + "'s " +  str(timestamp) + " snapshot.")
         return True
+
     # 스냅샷에 이미 좋아요 수가 1 이상인 경우
-    else:
-        # 이미 해당 유저가 좋아요 표시를 남겼다면 작업 취소
-        if like_uid in _snapshot[str(uid)][timestamp]['like_user']:
-            print(str(like_uid) + " user already likes " + str(uid) + "'s " +  str(timestamp) + " snapshot.")
-            return False
-        # 좋아요 표시를 안 남겼다면 작업 진행
-        else:
-            _snapshot[str(uid)][timestamp]['like_user'].append(like_uid)
-            print(str(like_uid) + " likes " + str(uid) + "'s " +  str(timestamp) + " snapshot.")
-            return True
+    # 이미 해당 유저가 좋아요 표시를 남겼다면 작업 취소
+    if like_uid in user_list:
+        print(str(like_uid) + " user already likes " + str(uid) + "'s " +  str(timestamp) + " snapshot.")
+        return False
+
+    # 좋아요 표시를 안 남겼다면 작업 진행
+    user_list.append(like_uid)
+    dir.update({'like_user':user_list})
+    print(str(like_uid) + " likes " + str(uid) + "'s " +  str(timestamp) + " snapshot.")
+    return True
 
 # 스냅샷 좋아요 취소
 def unlike_snapshot(uid, unlike_uid, timestamp):
@@ -409,25 +424,29 @@ def unlike_snapshot(uid, unlike_uid, timestamp):
     timestamp(str) : 스냅샷의 타임스탬프 값
     like_uid(int) : 스냅샷에 좋아요 표시를 취소한 유저의 uid
     """
+    dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
+
     # 스냅샷 데이터가 없으면 False 반환
-    if str(uid) not in _snapshot or timestamp not in _snapshot[str(uid)]:
+    if dir.get() is None:
         print("There's no snapshot with that uid or timestamp.")
         return False
 
+    user_list = dir.child('like_user').get()
     # 해당 스냅샷을 아무도 좋아요 표시를 남기지 않았다면 작업 취소
-    if 'like_user' not in _snapshot[str(uid)][timestamp]:
+    if user_list is None:
         print("The user who likes "+ str(uid) + "'s " +  str(timestamp) + " snapshot doesn't exist.")
         return False
 
-    # 해당 유저가 좋아요 표시를 남기지 않았다면 작업 취소
-    if unlike_uid not in _snapshot[str(uid)][timestamp]['like_user']:
-        print(str(unlike_uid) + " user doesn't like snapshot yet.")
-        return False
-    
     # 좋아요 표시를 남겼다면 작업 진행
-    _snapshot[str(uid)][timestamp]['like_user'].remove(unlike_uid)
-    print(str(unlike_uid) + " unlikes " + str(uid) + "'s " +  str(timestamp) + " snapshot.")
-    return True
+    if unlike_uid in user_list:
+        user_list.remove(unlike_uid)
+        dir.update({'like_user':user_list})
+        print(str(unlike_uid) + " unlikes " + str(uid) + "'s " +  str(timestamp) + " snapshot.")
+        return True
+    
+    # 해당 유저가 좋아요 표시를 남기지 않았다면 작업 취소
+    print(str(unlike_uid) + " user doesn't like snapshot yet.")
+    return False
 
 # 스냅샷 좋아요 수
 def get_snapshot_like_num(uid, timestamp):
@@ -437,10 +456,9 @@ def get_snapshot_like_num(uid, timestamp):
     uid(int) : 해당 스냅샷을 만든 유저 uid
     timestamp(str) : 스냅샷의 타임스탬프 값
     """
-    if str(uid) in _snapshot and timestamp in _snapshot[str(uid)] and 'like_user' in _snapshot[str(uid)][timestamp]:
-        return len(_snapshot[str(uid)][timestamp]['like_user'])
-    else:
-        return 0
+    user_list = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp)).child('like_user').get() or []
+    
+    return len(user_list)
 
 # 스냅샷 삭제
 def delete_snapshot(uid, timestamp):
@@ -450,16 +468,14 @@ def delete_snapshot(uid, timestamp):
     uid(int) : 스냅샷을 만든 유저의 uid
     timestamp(str) : 스냅샷의 타임스탬프 값
     """
-    if str(uid) in _snapshot and timestamp in _snapshot[str(uid)]:
-        del _snapshot[str(uid)][timestamp]
+    dir = db.reference('SNAPSHOT').child(str(uid)).child(str(timestamp))
+    
+    if dir.get() is not None:
+        # SNAPSHOT에서 해당 스냅샷 삭제
+        dir.delete()
+
         print("Delete " + str(uid) + ", " + str(timestamp) + " snapshot success.")
         return True
-        if len(_snapshot[str(uid)]) == 0:
-            del _snapshot[str(uid)]
     else:
         print("There's no snapshot with that uid or timestamp.")
         return False
-
-def save():
-    dir = db.reference('SNAPSHOT')
-    dir.update(_snapshot)

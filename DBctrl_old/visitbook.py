@@ -35,21 +35,18 @@ from pprint import pprint
 }
 """
 
-_visitbook = db.reference('VISITBOOK').get()
-
 def increase_comment_num(uid):
     """
     방명록에 댓글 추가 후 답글 갯수를 1 증가시키는 함수
 
     uid(int) : 해당 프로필 유저의 uid 값
     """
-    print(_visitbook[str(uid)])
-    if str(uid) in _visitbook:
-        _visitbook[str(uid)]['comment_num'] = _visitbook[str(uid)]['comment_num'] + 1
-        return True
-    else:
+    try:
+        dir = db.reference('VISITBOOK').child(str(uid)).child('comment_num')
+        return dir.transaction(increase_num)
+    except db.TransactionAbortedError:
+        print("Transaction failed. -> increase comment num")
         return False
-
 def increase_comment_reply_num(uid, cid):
     """
     방명록 내 댓글에 답글 추가 후 답글 갯수를 1 증가시키는 함수
@@ -57,24 +54,24 @@ def increase_comment_reply_num(uid, cid):
     uid(int) : 해당 프로필 유저의 uid 값
     cid(int) : 답글이 달린 댓글의 cid 값
     """
-    if str(uid) in _visitbook and str(cid) in _visitbook[str(uid)]:
-        _visitbook[str(uid)][str(cid)]['reply_num'] = _visitbook[str(uid)][str(cid)]['reply_num'] + 1
-        return True
-    else:
+    try:
+        dir = db.reference('VISITBOOK').child(str(uid)).child(str(cid)).child('reply_num')
+        return dir.transaction(increase_num)
+    except db.TransactionAbortedError:
+        print("Transaction failed. -> increase comment reply num")
         return False
-        
 def decrease_comment_num(uid):
     """
     방명록에 댓글 삭제 후 답글 갯수를 1 감소시키는 함수
 
     uid(int) : 해당 프로필 유저의 uid 값
     """
-    if str(uid) in _visitbook:
-        _visitbook[str(uid)]['comment_num'] = _visitbook[str(uid)]['comment_num'] - 1
-        return True
-    else:
+    try:
+        dir = db.reference('VISITBOOK').child(str(uid)).child('comment_num')
+        return dir.transaction(decrease_num)
+    except db.TransactionAbortedError:
+        print("Transaction failed. -> decrease comment num")
         return False
-
 def decrease_comment_reply_num(uid, cid):
     """
     방명록 내 댓글에 답글 삭제 후 답글 갯수를 1 감소시키는 함수
@@ -82,10 +79,11 @@ def decrease_comment_reply_num(uid, cid):
     uid(int) : 해당 프로필 유저의 uid 값
     cid(int) : 답글이 달린 댓글의 cid 값
     """
-    if str(uid) in _visitbook and str(cid) in _visitbook[str(uid)]:
-        _visitbook[str(uid)][str(cid)]['reply_num'] = _visitbook[str(uid)][str(cid)]['reply_num'] - 1
-        return True
-    else:
+    try:
+        dir = db.reference('VISITBOOK').child(str(uid)).child(str(cid)).child('reply_num')
+        return dir.transaction(decrease_num)
+    except db.TransactionAbortedError:
+        print("Transaction failed. -> decrease comment reply num")
         return False
 
 def is_visitbook_exist(uid):
@@ -95,8 +93,8 @@ def is_visitbook_exist(uid):
 
     uid(int) : 찾고자 하는 유저의 uid
     """
-    return str(uid) in _visitbook
-
+    dir = db.reference('VISITBOOK').child(str(uid))
+    return dir.get() is not None
 def is_comment_exist(uid, cid):
     """
     해당 cid 값을 가진 방명록 댓글이 있는지 알려주는 함수
@@ -105,9 +103,8 @@ def is_comment_exist(uid, cid):
     uid(int) : 찾고자 하는 유저의 uid
     cid(str) : 탐색할 댓글의 cid 값
     """
-    return str(uid) in _visitbook and str(cid) in _visitbook[str(uid)]
-
-
+    dir = db.reference('VISITBOOK').child(str(uid)).child(str(cid))
+    return dir.get() is not None
 def is_comment_reply_exist(uid, cid, reply_cid):
     """
     해당 reply_cid 값을 가진 방명록 댓글의 답글이 있는지 알려주는 함수
@@ -117,13 +114,14 @@ def is_comment_reply_exist(uid, cid, reply_cid):
     cid(str) : 답글이 있는 댓글의 cid 값
     reply_cid(str) : 답글의 cid 값
     """
-    return str(uid) in _visitbook and str(cid) in _visitbook[str(uid)] and 'reply' in _visitbook[str(uid)][str(cid)] and str(reply_cid) in _visitbook[str(uid)][str(cid)]['reply']
+    dir = db.reference('VISITBOOK').child(str(uid)).child(str(cid)).child('reply').child(str(reply_cid))
+    return dir.get() is not None
 
 def get_all_visitbook():
     """
     모든 방명록 정보를 받는 함수
     """
-    return _visitbook
+    return db.reference('VISITBOOK').get()
 
 # 방명록 요청
 def get_visitbook(uid):
@@ -132,12 +130,7 @@ def get_visitbook(uid):
     
     uid(int) : 해당 프로필 유저의 uid 값
     """
-    if str(uid) in _visitbook:
-        return _visitbook[str(uid)]
-    else:
-        return None
-
-    
+    return db.reference('VISITBOOK').child(str(uid)).get()
 # 방명록 댓글 요청
 def get_comment(uid, cid):
     """
@@ -146,12 +139,7 @@ def get_comment(uid, cid):
     uid(int) : 해당 프로필 유저의 uid 값
     cid(int) : 방명록 댓글 cid 값
     """
-    if str(uid) in _visitbook and str(cid) in _visitbook[str(uid)]:
-        return _visitbook[str(uid)][str(cid)]
-    else:
-        return None
-
-
+    return db.reference('VISITBOOK').child(str(uid)).child(str(cid)).get()
 # 방명록 댓글의 답글 요청
 def get_comment_reply(uid, cid, reply_cid):
     """
@@ -161,10 +149,7 @@ def get_comment_reply(uid, cid, reply_cid):
     cid(int) : 방명록 댓글 cid 값
     reply_cid(str) : 답글의 cid 값
     """
-    if str(uid) in _visitbook and str(cid) in _visitbook[str(uid)] and 'reply' in _visitbook[str(uid)][str(cid)] and str(reply_cid) in _visitbook[str(uid)][str(cid)]['reply']:
-        return _visitbook[str(uid)][str(cid)]['reply'][str(reply_cid)]
-    else:
-        return None
+    return db.reference('VISITBOOK').child(str(uid)).child(str(cid)).child('reply').child(str(reply_cid)).get()
 
 # 댓글 리스트 요청
 def get_comment_list(uid):
@@ -228,10 +213,7 @@ def get_comment_reply_list(uid, cid):
     uid(int) : 해당 프로필 유저의 uid 값
     cid(int) : 방명록 댓글 cid 값
     """
-
-    reply_data = None
-    if str(uid) in _visitbook and str(cid) in _visitbook[str(uid)] and 'reply' in _visitbook[str(uid)][str(cid)]:
-        reply_data = _visitbook[str(uid)][str(cid)]['reply']
+    reply_data = db.reference('VISITBOOK').child(str(uid)).child(str(cid)).child('reply').get()
 
     # 답글 데이터가 없으면 None 반환
     if reply_data is None:
@@ -256,13 +238,7 @@ def get_comment_num(uid):
 
     uid(int) : 해당 프로필 유저의 uid 값
     """
-
-    if str(uid) in _visitbook and 'comment_num' in _visitbook[str(uid)]:
-        return _visitbook[str(uid)]['comment_num']
-    else:
-        return 0
-
-
+    return db.reference('VISITBOOK').child(str(uid)).child('comment_num').get() or 0
 # 방명록 답글 갯수 요청
 def get_comment_reply_num(uid, cid):
     """
@@ -271,10 +247,7 @@ def get_comment_reply_num(uid, cid):
     uid(int) : 해당 프로필 유저의 uid 값
     cid(int) : 방명록 댓글 cid 값
     """
-    if str(uid) in _visitbook and str(cid) in _visitbook[str(uid)] and 'reply_num' in _visitbook[str(uid)][str(cid)]:
-        return _visitbook[str(uid)][str(cid)]['reply_num']
-    else:
-        return 0
+    return db.reference('VISITBOOK').child(str(uid)).child(str(cid)).child('reply_num').get() or 0
 
 # 방명록 댓글 추가
 def add_comment(uid, writer_uid, comment, timestamp):
@@ -293,22 +266,19 @@ def add_comment(uid, writer_uid, comment, timestamp):
         return False
 
     # DB에 댓글 등록 후 timestamp 반환
-    if str(uid) not in _visitbook:
-        _visitbook[str(uid)] = {'comment_num': 0}
-
-    _visitbook[str(uid)][str(writer_uid) + timestamp] = {
+    new_comment = db.reference('VISITBOOK').child(str(uid)).push()
+    new_comment.set({
         'writer_uid': writer_uid,
         'comment': comment,
         'timestamp': timestamp,
         'reply_num': 0
-    }
+    })
 
     # 댓글 갯수 1 증가
     increase_comment_num(uid)
 
     # 추가 완료 후 timestamp 반환
     return timestamp
-
 # 방명록 댓글의 답글 추가
 def add_comment_reply(uid, cid, writer_uid, reply_comment, timestamp):
     """
@@ -331,15 +301,13 @@ def add_comment_reply(uid, cid, writer_uid, reply_comment, timestamp):
         print("Invalid comment ID value.")
         return False
     
-    if 'reply' not in _visitbook[str(uid)][str(cid)]:
-        _visitbook[str(uid)][str(cid)] = {'reply_num': 0}
-
     # 모든 값이 유효하다면 답글 DB에 저장
-    _visitbook[str(uid)][str(cid)]['reply'][str(writer_uid) + timestamp] = {
+    new_reply = db.reference('VISITBOOK').child(str(uid)).child(str(cid)).child('reply').push()
+    new_reply.set({
         'writer_uid': writer_uid,
         'reply_comment': reply_comment,
         'timestamp': timestamp,
-    }
+    })
 
     # 답글 갯수 1 증가
     increase_comment_reply_num(uid, cid)
@@ -378,13 +346,15 @@ def modify_comment(uid, cid, writer_uid, modified_comment, timestamp):
         return False
 
     # 모든 값이 유효하다면 DB에 댓글 등록
-    _visitbook[str(uid)][str(cid)]['comment'] = modified_comment
-    _visitbook[str(uid)][str(cid)]['timestamp'] = timestamp
+    dir = db.reference('VISITBOOK').child(str(uid)).child(str(cid))
+    dir.update({
+        'comment': modified_comment,
+        'timestamp': timestamp
+    })
 
     # 수정 완료 후 timestamp 반환
     print(str(uid) + "'s visitbook comment " + str(cid) + " modified.")
     return timestamp
-
 # 방명록 댓글의 답글 수정
 def modify_comment_reply(uid, cid, reply_cid, writer_uid, modified_reply_comment, timestamp):
     """
@@ -416,8 +386,11 @@ def modify_comment_reply(uid, cid, reply_cid, writer_uid, modified_reply_comment
         return False
 
     # 모든 값이 유효하다면 DB에 댓글 등록
-    _visitbook[str(uid)][str(cid)]['reply'][reply_cid]['reply_comment'] = modified_reply_comment
-    _visitbook[str(uid)][str(cid)]['reply'][reply_cid]['timestamp'] = timestamp
+    dir = db.reference('VISITBOOK').child(str(uid)).child(str(cid)).child('reply').child(str(reply_cid))
+    dir.update({
+        'reply_comment': modified_reply_comment,
+        'timestamp': timestamp
+    })
 
     # 수정 완료 후 timestamp 반환
     print(str(uid) + "'s visitbook comment " + str(cid) + " modified.")
@@ -432,12 +405,13 @@ def delete_visitbook(uid):
     """
     # 해당 uid 유저의 방명록 데이터가 없으면 False 반환
     
-    if is_visitbook_exist(uid) is False:
+    if is_visitbook_exist() is False:
         print("User " + str(uid) + "'s visitbook is not exist.")
         return False
     
     # 해당 유저의 방명록 데이터를 모두 삭제
-    del _visitbook[str(uid)]
+    dir = db.reference('VISITBOOK').child(str(uid))
+    dir.delete()
 
     # 삭제 완료 후 True 반환
     print("Delete visitbook.(uid : " + str(uid) + ")")
@@ -458,7 +432,8 @@ def delete_comment(uid, cid):
         return False
     
     # 해당 댓글이 있다면 삭제, True 반환
-    del _visitbook[str(uid)][str(cid)]
+    dir = db.reference('VISITBOOK').child(str(uid)).child(str(cid))
+    dir.delete()
 
     # 댓글 갯수 1 감소
     decrease_comment_num(uid)
@@ -466,7 +441,6 @@ def delete_comment(uid, cid):
     # 삭제 완료 후 True 반환
     print("Comment " + str(cid) + "in " + str(uid) + "'s visitbook is deleted.")
     return True
-
 # 방명록 댓글의 답글 삭제
 def delete_comment_reply(uid, cid, reply_cid):
     """
@@ -484,7 +458,8 @@ def delete_comment_reply(uid, cid, reply_cid):
         return False
     
     # 해당 댓글이 있다면 삭제, True 반환
-    del _visitbook[str(uid)][str(cid)]['reply'][str(reply_cid)]
+    dir = db.reference('VISITBOOK').child(str(uid)).child(str(cid)).child('reply').child(str(reply_cid))
+    dir.delete()
 
     # 답글 갯수 1 감소
     decrease_comment_reply_num(uid, cid)
@@ -492,7 +467,3 @@ def delete_comment_reply(uid, cid, reply_cid):
     # 삭제 완료 후 True 반환
     print("Reply comment " + str(reply_cid) + " of comment " + str(cid) + "in " + str(uid) + "'s visitbook is deleted.")
     return True
-
-def save():
-    dir = db.reference('VISITBOOK')
-    dir.update(_visitbook)

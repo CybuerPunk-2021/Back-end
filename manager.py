@@ -10,13 +10,16 @@ email_auth = {} # dict to save signup data
 
 def manage(data, sck, addr): # manage function
     socket = (sck, addr) # make tuple to save socket data
-    log.add_log(get_timestamp(), {'type': 'receive', 'content': data}, addr) # write log
     try:
         act = data['action'] # 
         if act not in manage_list:
             send({'action': 'wrong action format'}, socket)
             return
+        start = datetime.now()
         manage_list[act](data, socket)
+        end = datetime.now()
+        print('TIME: ' + str(end - start))
+        log.add_log(get_timestamp(), {'type': 'receive', 'content': data}, addr) # write log
     except ConnectionResetError:
         raise ConnectionResetError()
     except Exception as e:
@@ -104,6 +107,11 @@ def signup(data, socket):
                     ret = {'action': 'email auth', 'auth': 'True'}
                     send(ret, socket)
                     del(email_auth[(data['id']), data['nickname']])
+                    
+                    userinfo.save()
+                    profile.save()
+                    newsfeed.save()
+
                     break
                 else:
                     ret = {'action': 'email auth', 'auth': 'False'}
@@ -207,6 +215,8 @@ def add_follow(data, socket):
     else:
         ret = {'action': 'ALREADY'}
     send(ret, socket)
+    follow.save()
+    profile.save()
     
 def del_follow(data, socket):
     if follow.unfollow_user(data['from_uid'], data['to_uid']):
@@ -214,6 +224,8 @@ def del_follow(data, socket):
     else:
         ret = {'action': 'ALREADY'}
     send(ret, socket)
+    follow.save()
+    profile.save()
 
 def mod_nick(data, socket):
     if profile.modify_nickname(data['uid'], data['nickname']):
@@ -222,6 +234,8 @@ def mod_nick(data, socket):
     else:
         ret = {'action': 'dup nick'}
     send(ret, socket)
+    profile.save()
+    newsfeed.save()
 
 def mod_email(data, socket):
     try:
@@ -237,13 +251,13 @@ def mod_email(data, socket):
             auth = auth.decode()
             auth = auth.replace("'", "\"")
             auth = json.loads(auth)
-            auth = json.loads(auth)
             if auth['action'] == 'email auth':
                 if email_auth[data['uid']] == auth['auth']:
                     userinfo.modify_email(userinfo.get_login_id_using_uid(data['uid']), data['email'])
                     ret = {'action': 'email auth', 'auth': 'True'}
                     send(ret, socket)
                     del(email_auth[data['uid']])
+                    userinfo.save()
                     break
                 else:
                     ret = {'action': 'email auth', 'auth': 'False'}
@@ -267,6 +281,7 @@ def mod_pw(data, socket):
     else:
         ret = {'action': 'err'}
     send(ret, socket)
+    userinfo.save()
 
 def mod_intro(data, socket):
     if profile.modify_introduction(data['uid'], data['introduce']):
@@ -274,6 +289,7 @@ def mod_intro(data, socket):
     else:
         ret = {'action': 'err'}
     send(ret, socket)
+    profile.save()
 
 def mod_snapdesc(data, socket):
     if snapshot.modify_snapshot_intro(data['uid'], data['timestamp'], data['introduce']):
@@ -281,6 +297,7 @@ def mod_snapdesc(data, socket):
     else:
         ret = {'action': 'err'}
     send(ret, socket)
+    snapshot.save()
 
 def del_snapshot(data, socket):
     if snapshot.delete_snapshot(data['uid'], data['timestamp']):
@@ -289,6 +306,8 @@ def del_snapshot(data, socket):
     else:
         ret = {'action': 'err'}
     send(ret, socket)
+    snapshot.save()
+    newsfeed.save()
 
 def like_snapshot(data, socket):
     if data['type'] == 'add':
@@ -304,6 +323,7 @@ def like_snapshot(data, socket):
     else:
         ret = {'action': 'like snapshot err'}
     send(ret, socket)
+    snapshot.save()
 
 def get_snapshot_item_list(data, socket):
     res = snapshot.get_snapshot_item(data['uid'], data['timestamp'])
@@ -326,6 +346,8 @@ def save_snapshot(data, socket):
         newsfeed.add_snap(data['uid'], res)
         ret = {'action': 'ok', 'timestamp': res}
     send(ret, socket)
+    snapshot.save()
+    newsfeed.save()
 
 def visit_book_request(data, socket):
     #if data['type'] == 'comment':
@@ -360,9 +382,12 @@ def visit_book_write(data, socket):
     else:
         ret = {'action': 'err'}
     send(ret, socket)
+    visitbook.save()
 
 def search(data, socket):
     query = profile.search_profile(data['query'], data['uid'])
+    for q in query:
+        q['isfollow'] = follow.is_following(data['uid'], q['uid'])
     res = {'action': 'search', 'result': query}
     send(res, socket)
 
@@ -412,6 +437,7 @@ def chg_profile_img(data, socket):
     profile.modify_profile_image_time(data['uid'], ts)
     ret = {'action': 'chg_profile_img', 'timestamp': ts}
     send(ret, socket)
+    profile.save()
 
 def chk_profile_img(data, socket):
     ts = profile.get_profile_image_time_list(data['uid'])
@@ -423,6 +449,7 @@ def chg_bg_img(data, socket):
     profile.modify_profile_background_image_time(data['uid'], ts)
     ret = {'action': 'chg_bg_img', 'timestamp': ts}
     send(ret, socket)
+    profile.save()
 
 def chk_bg_img(data, socket):
     ts = profile.get_profile_background_image_time(data['uid'])
@@ -441,11 +468,11 @@ def backup_log(data, socket):
 
 
 def send(msg, socket):
-    log.add_log(get_timestamp(), {'type': 'send', 'content': msg}, socket[1])
     msg = str(msg)
     msg = msg.replace("\'", "\"")
     print(msg)
     socket[0].send(msg.encode())
+    log.add_log(get_timestamp(), {'type': 'send', 'content': msg}, socket[1])
 
 def get_timestamp():
     t = str(datetime.now())
