@@ -22,6 +22,8 @@ from .visitbook import delete_visitbook
 """
 
 _userinfo = db.reference('USERINFO').get()
+if not _userinfo:
+    _userinfo = {}
 
 
 def get_all_userinfo():

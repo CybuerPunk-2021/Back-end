@@ -234,6 +234,9 @@ class SnapshotObj:
 """
 
 _snapshot = db.reference('SNAPSHOT').get()
+if not _snapshot:
+    _snapshot = {}
+
 
 def get_all_snapshot():
     """

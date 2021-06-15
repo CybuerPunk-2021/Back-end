@@ -4,6 +4,8 @@ from datetime import date, timedelta
 from .follow import get_user_following_uid_list
 
 _newsfeed = db.reference('NEWSFEED').get()
+if not _newsfeed:
+    _newsfeed = {}
 
 # NEWSFEED 데이터베이스 구조
 """

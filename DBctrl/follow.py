@@ -7,6 +7,8 @@ from .profile import decrease_following_num
 
 
 _follow = db.reference("FOLLOW").get()
+if not _follow:
+    _follow = {}
 
 # FOLLOW 데이터베이스 구조
 """

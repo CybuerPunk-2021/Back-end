@@ -36,6 +36,9 @@ from pprint import pprint
 """
 
 _visitbook = db.reference('VISITBOOK').get()
+if not _visitbook:
+    _visitbook = {}
+
 
 def increase_comment_num(uid):
     """

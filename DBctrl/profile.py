@@ -3,6 +3,8 @@ from firebase_admin import db
 import time
 
 _profile = db.reference('PROFILE').get()
+if not _profile:
+    _profile = {}
 
 # PROFILE 데이터베이스 구조
 """
