@@ -311,7 +311,7 @@ def modify_profile_background_image_time(uid, timestamp):
     if str(uid) in _profile:
         _profile[str(uid)]['bg_image_time'] = timestamp
 
-def modify_background_image_size(uid, size):
+def modify_profile_background_image_size(uid, size):
     """
     제일 최근 배경 이미지의 사이즈를 변경하는 함수
 
