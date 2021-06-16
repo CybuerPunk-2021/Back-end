@@ -191,6 +191,7 @@ def get_follower(data, socket):
         for r in res:
             tmp = {'uid': r}
             tmp['nickname'] = profile.get_profile_nickname(r)
+            tmp['isfollow'] = str(follow.is_following(data['uid'], r))
             result.append(tmp)
         ret = {'action': 'follower', 'follower': result}
     else:

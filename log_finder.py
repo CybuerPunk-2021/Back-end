@@ -2,7 +2,7 @@ import firebase_admin
 from firebase_admin import db
 from pprint import pprint
 
-key_path = "./key/key.json"
+key_path = "../key/key.json"
 if not firebase_admin._apps:
     cred = firebase_admin.credentials.Certificate(key_path)
     firebase_admin.initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'})
@@ -25,5 +25,5 @@ def log_find_data(query):
     pprint(lst)
 
 if __name__ == '__main__':
-    query = {'action': 'snapshot_del'}
+    query = {'action': 'signup'}
     log_find_data(query)
