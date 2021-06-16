@@ -194,21 +194,17 @@ def get_comment_list(uid):
     if comment_data is None:
         print("There's no comment data in " + str(uid) + "'s visitbook.")
         return None
-    
-    # 불러온 데이터에서 리스트로 변경하기 위해 comment_num 속성 제거
-    if comment_data.get('comment_num') is not None:
-        del comment_data['comment_num']
-
-    # 리스트로 변환
-    for comment_id, data in comment_data.items():
-        # 답글 정보가 있다면 제거
-        if data.get('reply') is not None:
-            del data['reply']
-        # 데이터의 value에 cid 정보 삽입
-        data['cid'] = comment_id
 
     # 댓글 정보 리스트 반환
-    return_list = list(comment_data.values())
+    return_list = []
+    for cid in comment_data:
+        _cid = comment_data[str(cid)]
+        return_list.append({
+            'writer_uid': _cid['writer_uid'],
+            'comment': _cid['comment'],
+            'timestamp': _cid['timestamp'],
+            'reply_num': _cid['reply_num']
+        })
     return_list.reverse()
     return return_list
 
