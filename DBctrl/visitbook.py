@@ -197,7 +197,9 @@ def get_comment_list(uid):
 
     # 댓글 정보 리스트 반환
     return_list = []
-    for cid in comment_data:
+    for cid in comment_data.keys():
+        if cid == 'comment_num':
+            continue
         _cid = comment_data[str(cid)]
         return_list.append({
             'writer_uid': _cid['writer_uid'],
