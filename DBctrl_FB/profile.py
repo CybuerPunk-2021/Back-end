@@ -1,7 +1,10 @@
+from firebase_admin import db
+
 import time
 
-from os.path import exists
-import json
+_profile = db.reference('PROFILE').get()
+if not _profile:
+    _profile = {}
 
 # PROFILE 데이터베이스 구조
 """
@@ -23,13 +26,6 @@ import json
     }
 }
 """
-
-path = "D:\\darak\\profile"
-if not exists(path):
-    _profile = {}
-else:
-    f = open(path)
-    _profile = json.load(f)
 
 def increase_following_num(uid):
     if str(uid) in _profile:
@@ -348,5 +344,5 @@ def delete_profile(uid):
     return True
 
 def save():
-    f = open(path, 'w')
-    f.write(str(_profile).replace('\'', '\"'))
+    dir = db.reference('PROFILE')
+    dir.update(_profile)

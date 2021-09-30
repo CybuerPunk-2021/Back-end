@@ -1,10 +1,9 @@
+from firebase_admin import db
+
 from .etc import increase_num
 from .etc import decrease_num
 
 from pprint import pprint
-
-from os.path import exists
-import json
 
 # VISITBOOK 데이터베이스 구조
 """
@@ -36,12 +35,9 @@ import json
 }
 """
 
-path = "D:\\darak\\visitbook"
-if not exists(path):
+_visitbook = db.reference('VISITBOOK').get()
+if not _visitbook:
     _visitbook = {}
-else:
-    f = open(path)
-    _visitbook = json.load(f)
 
 
 def increase_comment_num(uid):
@@ -499,5 +495,5 @@ def delete_comment_reply(uid, cid, reply_cid):
     return True
 
 def save():
-    f = open(path, 'w')
-    f.write(str(_visitbook).replace('\'', '\"'))
+    dir = db.reference('VISITBOOK')
+    dir.update(_visitbook)

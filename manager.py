@@ -16,15 +16,23 @@ def manage(data, sck, addr): # manage function
             send({'action': 'wrong action format'}, socket) # return wrong action
             return # return
         manage_list[act](data, socket) # do action
-        log.add_log(get_timestamp(), {'type': 'receive', 'content': data}, addr) # write log
+        #log.add_log(get_timestamp(), {'type': 'receive', 'content': data}, addr) # write log
     except ConnectionResetError: # connection error
         raise ConnectionResetError() # raise
+    except json.decoder.JSONDecodeError:
+        print("CONNECTION OUT")
     except Exception as e: # other exceptions
         send({'action': 'wrong msg format'}, socket) # return wrong msg
         traceback.print_exc() # stack trace
-        log.add_error_log(get_timestamp(), {'content': data, 'error_type': str(type(e)) + " : " + str(e)}, addr) # write err log
+        #log.add_error_log(get_timestamp(), {'content': data, 'error_type': str(type(e)) + " : " + str(e)}, addr) # write err log
     return
+
+def profile_image_request(data, socket):
+    uid = data['uid']
+    img = image.read_profile_image(uid)
     
+
+
 def signup(data, socket): # signup
     res = userinfo.check_id_nickname_dup(data['id'], data['nickname']) # chk dup
 
@@ -423,6 +431,49 @@ def backup_log(data, socket):
     log.delete_all_log() # delte all log
     send("OK", socket) # send
 
+def img_update(data, socket):
+    ret = {'action': 'ok', 'timestamp': 'None'}
+    if data['timestamp'] == 'None':
+        data['timestamp'] = get_timestamp()
+        ret['timestamp'] = data['timestamp']
+    file_name = str(data['uid']) + "_" + data['timestamp']
+    send(ret, socket)
+    try: 
+        print(data['size'])
+        img = socket[0].recv(data['size']) # recv image as byte array
+        f = open("D:\\darak\\img\\" + file_name, 'wb')
+        f.write(img)
+        f.close()
+        ret = {'action': 'image_update_ok'}
+        send(ret, socket)
+    except ConnectionResetError: # if connection error
+        raise ConnectionResetError() # raise
+    except Exception as e: # other exceptions
+        ret = {'action': 'image_update_err'}
+        send(ret, socket)
+        print("IMAGE UPDATE ERR")
+        raise e # raise
+
+def img_request(data, socket):
+    f = open("D:\\darak\\img\\" + data['file_name'], 'rb').read()
+    ret = {'action': 'img_request_size', 'size': len(f)}
+    send(ret, socket)
+    try: 
+        img = socket[0].recv(1024) # recv image as byte array
+        img = img.decode()
+        img = img.replace("'", "\"")
+        img = json.loads(img)
+        if img['action'] == 'img_request_size_ok':
+            socket[0].send(f)
+    except ConnectionResetError: # if connection error
+        raise ConnectionResetError() # raise
+    except Exception as e: # other exceptions
+        ret = {'action': 'image_request_err'}
+        send(ret, socket)
+        print("IMAGE REQUEST ERR")
+        raise e # raise
+
+
 
 
 
@@ -431,7 +482,7 @@ def send(msg, socket):
     msg = msg.replace("\'", "\"") # replace single quote to double
     print(msg) # print
     socket[0].send(msg.encode()) # send encoded msg
-    log.add_log(get_timestamp(), {'type': 'send', 'content': msg}, socket[1]) # wirte log
+    #log.add_log(get_timestamp(), {'type': 'send', 'content': msg}, socket[1]) # wirte log
 
 def get_timestamp(): # make timestamp
     t = str(datetime.now())
@@ -480,5 +531,7 @@ manage_list = {
     'chg_bg_img': chg_bg_img,
     'chk_bg_img': chk_bg_img,
     'snapshot_size': snapshot_size,
-    'backup_log': backup_log
+    'backup_log': backup_log,
+    'img_update_size': img_update,
+    'img_request': img_request
 }

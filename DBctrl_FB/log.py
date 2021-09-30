@@ -1,5 +1,4 @@
-from os.path import exists
-import json
+from firebase_admin import db
 
 """
 'LOG':
@@ -11,24 +10,26 @@ import json
     }
 }
 """
-path = "D:\\darak\\log"
-if not exists(path):
-    _log = {}
-else:
-    f = open(path)
-    _log = json.load(f)
 
 def get_all_log():
-    return _log
+    return db.reference('LOG').get()
 
 def get_log(timestamp):
-    return _log['log'][timestamp]
+    return db.reference('LOG').child(timestamp)
 
 def add_log(timestamp, data, ip_address):
-    _log['log'][timestamp] = {'data': data, 'IP': ip}
+    dir = db.reference('LOG').child(timestamp)
+    dir.set({
+        'data': data,
+        'IP': ip_address
+        })
 
 def add_error_log(timestamp, error_data, ip_address):
-    _log['error'][timestamp] = {'data': data, 'IP': ip}
+    dir = db.reference('ERROR').child(timestamp)
+    dir.set({
+        'data': error_data,
+        'IP': ip_address
+        })
 
 def search_log(from_time, to_time):
     # 검색 날짜가 to 시각이 from 시각보다 앞서면 False 출력

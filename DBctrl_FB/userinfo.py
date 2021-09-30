@@ -1,3 +1,5 @@
+from firebase_admin import db
+
 from .etc import make_uid
 from .etc import hash_password
 from .follow import delete_user_follow_info
@@ -5,9 +7,6 @@ from .profile import get_profile_nickname
 from .profile import is_profile_nickname_exist
 from .profile import delete_profile
 from .visitbook import delete_visitbook
-
-from os.path import exists
-import json
 
 # USERINFO 데이터베이스 구조
 """
@@ -22,12 +21,9 @@ import json
 }
 """
 
-path = "D:\\darak\\userinfo"
-if not exists(path):
+_userinfo = db.reference('USERINFO').get()
+if not _userinfo:
     _userinfo = {}
-else:
-    f = open(path)
-    _userinfo = json.load(f)
 
 
 def get_all_userinfo():
@@ -300,5 +296,5 @@ def login(login_id, password):
     return [nickname, user_data['uid'], user_data['auth_email']]
 
 def save():
-    f = open(path, 'w')
-    f.write(str(_userinfo).replace('\'', '\"'))
+    dir = db.reference('USERINFO')
+    dir.update(_userinfo)

@@ -1,3 +1,5 @@
+from firebase_admin import db
+
 from .etc import check_list_3dim
 from .etc import increase_num
 

@@ -1,8 +1,8 @@
 from socket import *
 
 clientSock = socket(AF_INET, SOCK_STREAM)
-clientSock.connect(('34.64.92.185', 5500))
-#clientSock.connect(('127.0.0.1', 5500))
+#clientSock.connect(('34.64.92.185', 5500))
+clientSock.connect(('127.0.0.1', 5500))
 
 print('연결 성공')
 

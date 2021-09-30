@@ -1,8 +1,8 @@
-import firebase_admin
-from firebase_admin import credentials, db, initialize_app
-if not firebase_admin._apps: # if firebase_admin not setted
-    cred = credentials.Certificate("../key/key.json") # find key file and make Certificate
-    initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'}) # make credentials
+# import firebase_admin
+# from firebase_admin import credentials, db, initialize_app
+# if not firebase_admin._apps: # if firebase_admin not setted
+#     cred = credentials.Certificate("../key/key.json") # find key file and make Certificate
+#     initialize_app(cred,{'databaseURL' : 'https://decisive-sylph-308301-default-rtdb.firebaseio.com/'}) # make credentials
 
 from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
@@ -44,6 +44,11 @@ class c_sck(Thread): # client socket thread object
                 self.c_socket.close() # close socket
                 self.lst.remove(self) # remove self from client list
                 break # break loop
+            except json.decoder.JSONDecodeError:
+                self.c_socket.close() # close socket
+                self.lst.remove(self) # remove self from client list
+                break # break loop
+
 
     def c_send(self, data): # send data to client
         self.c_socket.send(data.encode()) # send data to client

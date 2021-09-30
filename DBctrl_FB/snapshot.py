@@ -1,7 +1,6 @@
-from .etc import check_list_3dim
+from firebase_admin import db
 
-from os.path import exists
-import json
+from .etc import check_list_3dim
 
 # 아이템 객체 class
 """
@@ -234,13 +233,9 @@ class SnapshotObj:
 }        
 """
 
-path = "D:\\darak\\snapshot"
-if not exists(path):
+_snapshot = db.reference('SNAPSHOT').get()
+if not _snapshot:
     _snapshot = {}
-else:
-    f = open(path)
-    _snapshot = json.load(f)
-
 
 
 def get_all_snapshot():
@@ -495,5 +490,5 @@ def get_snapshot_size(uid, timestamp):
         return 0
 
 def save():
-    f = open(path, 'w')
-    f.write(str(_snapshot).replace('\'', '\"'))
+    dir = db.reference('SNAPSHOT')
+    dir.update(_snapshot)

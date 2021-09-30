@@ -1,16 +1,11 @@
+from firebase_admin import db
 from datetime import date, timedelta
 
 from .follow import get_user_following_uid_list
 
-from os.path import exists
-import json
-
-path = "D:\\darak\\newsfeed"
-if not exists(path):
+_newsfeed = db.reference('NEWSFEED').get()
+if not _newsfeed:
     _newsfeed = {}
-else:
-    f = open(path)
-    _newsfeed = json.load(f)
 
 # NEWSFEED 데이터베이스 구조
 """
@@ -99,5 +94,5 @@ def remove_old_newsfeed():
     save()
 
 def save():
-    f = open(path, 'w')
-    f.write(str(_newsfeed).replace('\'', '\"'))
+    dir = db.reference('NEWSFEED')
+    dir.update(_newsfeed)

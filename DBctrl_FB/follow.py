@@ -1,19 +1,14 @@
+from firebase_admin import db
+
 from .profile import increase_follower_num
 from .profile import increase_following_num
 from .profile import decrease_follower_num
 from .profile import decrease_following_num
 
-from os.path import exists
-import json
 
-
-
-path = "D:\\darak\\follow"
-if not exists(path):
+_follow = db.reference("FOLLOW").get()
+if not _follow:
     _follow = {}
-else:
-    f = open(path)
-    _follow = json.load(f)
 
 # FOLLOW 데이터베이스 구조
 """
@@ -253,5 +248,5 @@ def delete_user_follow_info(uid):
     print("All follow information of user " + str(uid) + " is deleted.")
 
 def save():
-    f = open(path, 'w')
-    f.write(str(_follow).replace('\'', '\"'))
+    dir = db.reference('FOLLOW')
+    dir.update(_follow)
